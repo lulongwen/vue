@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>v-model</title>
+</head>
+<body>
+	<div id="app">
+		<i-input v-model="value"></i-input>
+		{{value}}
+		<button @click=fnReduce>-1</button>
+	</div>
+
+	<pre>
+		v-model 一般用在 textarea或 input上，实现数据双向绑定, v-model修饰符
+
+    v-model.lazy="msg" change事件中同步，而不是 input事件中更新
+
+    v-model.number="msg" 将用户输入值转换为 Number类型，如果原值转换结果是 NaN，则返回原值
+
+    type="number"时， HTML输入的值也是返回 String类型
+
+    v-model.trim="msg" 去除前后空格，自动过滤用户输入的首尾空格
+	</pre>
+
+	<script src="https://cdn.bootcss.com/vue/2.6.8/vue.min.js"></script>
+	<script>
+		console.log('coms', Vue)
+		Vue.component('iInput', {
+			template: `<div>
+				<mark>{{current}}</mark>
+				<div @click=fnAdd>+=1</div>
+			</div>`,
+			props: {
+				value: {
+					type: Number,
+					default: 1
+				}
+			},
+			watch: {
+				// 不监听，子级数据不会改变
+				value(val) {
+					this.current = val
+				}
+			},
+			data() {
+				return {
+					current: this.value
+				}
+			},
+			methods: {
+				fnAdd() {
+					this.current ++;
+					this.$emit('input', this.current)
+				}
+			}
+		})
+
+		const vm = new Vue({
+			el: '#app',
+			data: {
+				value: 2
+			},
+			methods: {
+				fnReduce() {
+					this.value --;
+				}
+			}
+		})
+	</script>
+</body>
+</html>

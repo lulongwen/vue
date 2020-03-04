@@ -1,0 +1,26 @@
+[
+  {
+    "id":1,
+    "productName":"泰国进口椰青",
+    "productPrice":"19.9",
+    "productCover":"https://img10.360buyimg.com/n4/s260x260_jfs/t5191/70/21987339/5469447/886f3fe6/58f7221aNfa9fee72.jpg"
+  },
+  {
+    "id":2,
+    "productName":"微软",
+    "productPrice":"8288",
+    "productCover":"https://img14.360buyimg.com/n4/s260x260_jfs/t5731/272/9013826724/285715/bd7b2ae7/598018c1Ne0bbe560.jpg"
+  },
+  {
+    "id":3,
+    "productName":"港式老母鸡",
+    "productPrice":"28.8",
+    "productCover":"https://img10.360buyimg.com/n4/s260x260_jfs/t5350/106/1879643129/460180/cfc02a93/591594eeN853c6185.jpg"
+  },
+  {
+    "id":4,
+    "productName":"心相印",
+    "productPrice":"18.8",
+    "productCover":"https://img13.360buyimg.com/n4/s260x260_jfs/t7060/326/518606690/460886/5394c6ab/5977395cN17841569.jpg"
+  }
+]

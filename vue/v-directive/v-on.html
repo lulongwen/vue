@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue v-on事件,v-on 缩写 @</title>
+  <style>
+    body{
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1> v-on: 简写 @ 事件监听 <br>
+      如果不传递参数，就不要写括号，自动传入事件源，<br>
+      如果写了括号，就要手动传入 $event 属性</h1>
+    <p>
+      v-on:click="show" <br><br> 简写为：<br><br>
+      &lt;button @click="show">点击弹窗&lt;/button>
+    </p>
+
+    <p>
+      <button @click="show()">点击弹窗</button>
+    </p>
+    <br>
+
+    <p>
+      <big>请打分：{{count}} </big><br>
+      <button @click="add($event, 2)">加分</button>
+      <button @click="minus">减分</button>
+    </p>
+
+    <p><input type="text" @keyup.enter="more" v-model="input"></p>
+
+  </div>
+
+<script src="../assets/vue/vue.js"></script>
+<script>
+  // methods 和 data 中的数据会全部放到 vm 上，而且名字不能重复，重复会报错，
+  // methods 中的 this 指向的都是 vm 实例
+  const vm = new Vue({
+    el: '#app',
+    data: {  // 数据
+      count: 2,
+      input: 10
+    },
+    methods: {
+      show() { // 点击
+        alert('谁点击了');
+      },
+      add(ev, num) { // 加加
+        console.log('ev', ev);
+        this.count += num;
+      },
+      minus() { //减减
+        if (this.count <= 1) return;
+        this.count--;
+      },
+      more() {
+        this.count += parseInt( !isNaN(this.input) ? this.input : 0 );
+      }
+    }
+  });
+</script>
+</body>
+</html>

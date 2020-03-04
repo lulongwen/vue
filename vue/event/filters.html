@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>filters | 全局过滤器</title>
+</head>
+<body>
+  <div id="app">
+  <p>{{name | decorator('$')}} </p>
+  <p>{{name | decorator('.00')}}</p>
+  </div>
+
+  <script src="../vue.js"></script>
+  <script>
+    // 全局过滤器
+    // Vue.filter('decorator',function (val) {
+    //  return '$'+val+'$'
+    // });
+
+    var vm = new Vue({
+     data:{
+       name:'前端开发'
+     },
+
+     // 局部的过滤器
+     filters:{
+       decorator(val,currency){
+         console.log(this);// filters 里也没有this指向
+         return currency + val + currency
+       }
+     }
+    }).$mount('#app'); // 手动挂载
+  </script>
+</body>
+</html>

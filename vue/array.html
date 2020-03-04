@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>array 数组变异的方法</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+<div id="app">
+  <h1>只有以下方法改变数组，才能动态更新视图，通过下标改变数组不会改变视图更新</h1>
+  <pre>
+    push() 数组最后添加
+    pop()  删除数组最后一个
+    shift() 删除数组第一个
+    unshift() 数组最前面添加
+    splice() .splice(2, 1, 'value')
+      第一个是 删除的元素的下标，必选
+      第二个是 删除的个数，必选
+      第三个是 替换的值
+
+    sort() 排序
+    reverse() 倒序
+  </pre>
+
+  <pre>
+    Vue 不能检测以下变动的数组：，以下改变都不能改变视图刷新，用 v-model无效
+    用索引直接设置一个项时，例如： vm.items[9] = newValue 
+    修改数组的长度时，例如： vm.items.length = newLength
+
+    如何
+    Vue.set()
+    Array.splice(下标, 删除个数, 替换的值)
+
+    Vue.set(vm.list,1,2);
+    第一个 修改的对象
+    第二个 修改对象的属性
+    第三个 该属性的新值
+  </pre>
+
+  <input type="checkbox" v-model="checkAll"><br>
+  <input type="checkbox" 
+    v-for="item in products"
+    v-model="item.selected">
+
+  <p>{{fullname}}</p>
+
+
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  // vue 数组变异方法
+  // https://blog.csdn.net/a250758092/article/details/77664490
+  
+
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      products: [
+        {selected: true},
+        {selected: true}
+      ],
+      name: 'VUE',
+      lastname: 'Javascript'
+    },
+    // computed 计算属性，每个属性都是一个函数，值会缓存
+    computed:{
+      fullname(){
+        return `${this.name} ${this.lastname}`;
+      },
+      checkAll: {
+        get(){
+          // 返回什么结果，就会赋予 checkAll属性
+          return this.products.every( item=> item.selected);
+        },
+        set(val){
+          // val 是给checkAll赋值的时候传递过来的
+          return this.products.forEach( item=> item.selected = val);
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

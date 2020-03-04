@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>data</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+<div id="app">
+  <input type="text" v-model="val">
+
+  <p>computed: {{valComputed}}</p>
+
+  <p>methods: {{ valFN() }}</p>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+ /* 组件里面 的data必须 是函数，并且要 return 一个对象
+
+ 引用赋值，解决方法
+ 组件赋值的时候，通过函数 return了一个对象，就避免了 引用赋值；
+ 保证了每个组件在实例化的时候，都是一个新的数据，
+ 这个组件的数据改变，不会影响到其他组件的数据
+
+ 如果这个对象是声明的一个外部变量，就是引用赋值，一个改变会导致改变所有数据，这点是要注意的
+
+  data(){
+    return {
+
+    }
+  }
+
+  */
+
+
+  // vm 代表的就是viewModel，vm会代理data数据
+  // 指令：行间属性，执行一些特定的功能,vue要求指令名字必须以v-开头
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      val: '',
+      tit: 'goods and foods'
+    },
+    // computed 计算属性，每个属性都是一个函数
+    computed:{
+      // 根据值的改变而改变，计算的值，会被缓存
+      valComputed(){
+        return this.val.replace(/\d/g, '');
+      }
+    },
+    methods:{
+      // 每次都会重新去获取值，不会缓存
+      valFN(){
+        return this.val.replace(/\d/g, '');
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>v-model</title>
+</head>
+<body>
+  <div id="app">
+    <!-- 传参 @input=fn($event, 23)
+      @input="(ev) => { msg = ev.target.value }"
+    -->
+    <input type="text" :value="msg" @input="fnInput" />
+    <p>{{msg}}</p>
+
+    <hr>
+    <h3>v-model 是 @input + :value 的语法糖 </h3>
+    <p>
+      <input type="text" v-model="msg" />
+    </p>
+  </div>
+
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      data: {
+        msg: 123,
+        // 方法不能放在 data 里面，this 指向有问题 window
+        fn: function() {console.log(this) }
+      },
+
+      methods: {
+        fnInput (ev) {
+          this.msg = ev.target.value
+        }
+      }
+    })
+  </script>
+</body>
+</html>

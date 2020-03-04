@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue v-bind添加属性 :src</title>
+  <style>
+    #app{
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+    .back {
+      background-color: #90f;
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>:src v-bind 绑定属性</h1>
+    <p>
+      <!-- v-bind 变量
+        绑定动态数据使用冒号 后面写变量名 -->
+      <a :href="link" target="_blank">
+        v-bind 绑定变量
+        <img :src="url" :alt="alt" :width="w">
+      </a>
+    </p>
+    
+
+    <!-- v-bind 数组 -->
+    <div :style="[background, color]">v-bind 绑定数组</div>
+
+
+    <!-- v-bind 对象, 如果是true则生效 -->
+    <div :class="[{back:true}]">v-bind 绑定对象</div>
+  </div>
+
+<script src="../vue.js"></script>
+<script>
+  var app = new Vue({
+    el: '#app',
+    data: {
+      w: 200,
+      alt: 'VUE 加载的图片',
+      url: 'https://www.baidu.com/img/bd_logo1.png',
+      link: 'https://www.taobao.com',
+
+      background:{background:'greenyellow'},
+      color:{color:'red'},
+    }
+  })
+</script>
+</body>
+</html>

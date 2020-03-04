@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>事件修饰符</title>
+</head>
+<body>
+<div id="app">
+  <!--能不操作dom 就不要操作
+      如果加括号 就不会帮你传递事件源
+      $event是vue内置的事件源 名字不能更改
+      @ == v-on
+      修饰符 修饰方法 阻止冒泡 阻止默认事件 按键修饰符 -->
+  <input type="text" v-model="fruit" @keyup.enter="fn($event)">
+
+  <ul>
+    <li v-for="list in lists">{{list}}</li>
+  </ul>
+
+  <!--v-show  v-if
+      v-show 控制的样式 频繁切换显示隐藏
+      v-if 控制的DOM结构 如果不满足没有此DOM 确定后不会再切换-->
+  <div v-show="lists.length >= 5">
+    水果 已经五种了
+  </div>
+
+  
+  <h2>键盘修饰符</h2>
+  <input type="text" v-model.number.trim="fruit">
+
+  <!--修饰符-->
+  <input type="text" @keyup.f1="fnKeyup">
+
+  <input type="text" @keyup.ctrl.enter="fnKeyup">
+</div>
+
+<script src="../vue.js"></script>
+<script>
+
+// 自定义修饰符，配置一个键盘 code 别名
+// 常用的还要 .ctrl, .esc, .enter, .left, .right
+Vue.config.keyCodes = {
+  'f1': 112
+}
+
+let vm = new Vue({ //根实例
+  el: '#app',
+  data: {
+    fruit: '',
+    lists: ['香蕉', '橘子', '柠檬']
+  },
+  methods: { //存的是所有的方法,methods中所有的方法this指向都是vm
+    fn (e) {
+      console.log(123)
+      this.lists.push(this.fruit)
+      this.fruit = ''
+      //数据驱动视图，不操作dom
+    },
+
+    fnKeyup (ev) {
+      console.log(ev.target.value)
+    }
+  }
+})
+</script>
+</body>
+</html>

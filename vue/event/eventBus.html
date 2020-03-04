@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>EventBus 发布订阅-了解就行，实际开发中不用，用Vuex</title>
+	<style>
+		body {
+			max-width: 50%;
+			margin: 3em auto;
+		}
+		.first{
+			height: 120px;
+			margin-bottom: 1em;
+			background-color: rgba(51, 51, 51, .32);
+			color:green;
+		}
+
+		.second{
+			height: 120px;
+			margin-bottom: 1em;
+			background-color: #ccc;
+			color:#f00;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<first ></first>
+
+		<second></second>
+	</div>
+	
+
+	<template id="first">
+		<div class="first">
+			{{ color }}
+			<p><button @click="green">变绿</button></p>
+		</div>
+	</template>
+
+	<template id="second">
+		<div class="second">
+			{{ color }}
+			<p><button @click="change">变红色</button></p>
+		</div>
+	</template>
+
+	<script src="../node_modules/vue/dist/vue.js"></script>
+	<script>
+
+		// 创建一个共同的实例，通过共同的实例实现事件的交互， EventBus就是用来发布订阅的
+		const EventBus = new Vue;
+		console.log('EventBus', EventBus);
+
+		let First = {
+			template: '#first',
+			data(){
+				return {
+					color:'绿色',
+					old: '绿色'
+				}
+			},
+			methods:{
+				green(){
+					// 发布事件，事件名不能和 EventBus.$on() 重名
+					EventBus.$emit('change-green', this.old);
+				}
+			},
+			created(){
+				// 页面一加载，first组件长个耳朵听
+				EventBus.$on('change-red', val=>{
+					console.log('val', val, this.$el)
+					this.color = val;
+					this.$el.style.backgroundColor = '#f00';
+				});
+			}
+		};
+		
+
+		let Second = {
+			template: '#second',
+			data(){
+				return {
+					color: '红色',
+					old: '红色',
+					bg: 'red'
+				}
+			},
+			methods:{
+				change(){
+					EventBus.$emit('change-red', this.old);
+				}
+			},
+			created(){
+				// 订阅事件
+				EventBus.$on('change-green', val=>{
+					this.color = val;
+					this.$el.style.backgroundColor = 'rgba(49, 211, 49, .6)';
+				});
+			}
+		};
+
+
+		let vm = new Vue({
+			el: '#app',
+			components:{
+				First,
+				Second,
+			}
+		});
+	</script>
+</body>
+</html>

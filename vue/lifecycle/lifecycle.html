@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <title>vue生命周期</title>
+</head>
+<body>
+<div id="app">
+  <header>{{ msg }}</header>
+
+  <p><button class="btn">销毁组件</button></p>
+</div>
+
+<pre>
+vue实例,生命周期函数，不放在 methods，直接写在 Vue实例里面
+
+  beforeCreate // 此方法用不到
+  created
+    // 获取 ajax，初始化操作
+
+  beforeMount // 没有什么实际意义
+  mounted
+    // 真实的DOM渲染完了，
+    // 可以操作 DOM， ref="element" this.$refs.element
+
+  beforeUpdate // 一般用 watch 替换
+  updated
+    vm.msg = 'good' 触发 updated
+    数据改变触发 updated
+
+
+  activated(){}, // 组件的生命周期函数
+  deactivated(){}
+    针对组件的，
+
+  beforeDestroy 可以清楚事件绑定，或清除定时器
+  destroyed
+  vm.destroyed() vue 销毁实例，触发 destroyed()
+
+
+渲染DOM
+  render函数 > template > #app
+</pre>
+
+<script src="../vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      age: 2,
+      msg: 'VUE2.0 生命周期'
+    },
+
+    // 服务端渲染不能用 boforeCreate 和 created，因为服务端渲染没有DOM概念
+    beforeCreate: function () {
+      // 初始化自己的生命周期，并绑定自己的事
+      console.log('beforeCreate 组件实例刚刚被创建，没有任何属性和方法', this.$el, this)
+    },
+    created: function () {
+      // created可以 ajax请求数据和调用方法
+      console.log('created 实例已经创建完成，属性和方法已经绑定', this.$data, this)
+    },
+
+    beforeMount: function () {
+      // 第一次调用渲染函数之前
+      // mounted 可以操作DOM，created不能操作DOM，
+      // DOM相关操作放在 mounted里面，数据操作放在 created 和 mounted里面
+      console.log('beforeMount 模板编译之前', this.$el, this)
+    },
+    mounted: function () {
+      // 获取真实的 DOM，页面已经渲染完成
+      this.age = 29
+      console.log('mounted 获取真实的 DOM', this.$el, this)
+    },
+
+    beforeUpdate() {
+      // 更新数据时，调用
+      this.age = 30
+      console.log('beforeUpdate 更新之前',this)
+    },
+    updated() {
+      // 不要操作数据，会造成死循环
+      // this.age = 20
+      console.log('update组件更新完毕',this)
+    },
+
+    beforeDestroy() {
+      // 当前实例 this 还能用
+      console.log('beforeDestroy 销毁之前', this)
+    },
+    destroyed() {
+      // 实例上的 methods, watch, data 都被移除
+      console.log('destroyed 销毁之后', this)
+    },
+
+    // render 将会替代 template的所有内容
+    render(h){
+      // throw new TypeError('render error'); // 抛出错误，触发 renderError
+      console.log('render function invoked');
+      return h('section', {}, 'render function invoked')
+    },
+    // 渲染错误时触发，不捕获子组件错误事件，只关注当前组件
+    renderError(h, err){
+      return h('mark', {}, err.stack)
+    },
+    errorCaptured(){
+      // 会向上冒泡，并且正式环境可以使用，能捕获子组件的错误
+    }
+  });
+
+
+  // 销毁组件，触发 this.beforeDestroy()  &  this.destroyed()
+  vm.$destroy();
+  // this.$destroy();
+  // 除了 el: '#app' 挂载元素外，还有 vm.$mount('#app'); 挂载元素
+
+
+  // document.querySelector('.button:first-child').onclick = function(){
+  //     // 销毁之后，vm的实例已经不能用了，先点击销毁，再点击更新数据是没用的
+  //     // 这是全局函数，事件方式看上面
+  //     vm.$destroy();
+  // }
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>computed 计算属性</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+
+<div id="app">
+  <input type="text" v-model="val">
+  <p>
+    msg: {{msg}}  <br>
+    val: {{val}}
+  </p>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+
+  // computed 默认调用get方法，必须要有return,
+  // computed 不支持异步 不支持定时器
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      val: ''
+    },
+    computed:{
+      msg(){
+        if(this.val.length < 3)
+          return '输入长度小于3';
+        else return '随机的';
+      }
+    }
+  })
+</script>
+</body>
+</html>

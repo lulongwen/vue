@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue checkbox</title>
+  <style>
+    body{
+      max-width: 600px;
+      margin: 2em auto;
+    }
+    [v-cloak]{display:none}
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <!--
+    radio是通过 v-model进行分组的，vlaue值对应的就是选择后的结果
+  -->
+  <input type="radio" v-model="sex" value="男"> 男 <br>
+  <input type="radio" v-model="sex" value="女"> 女 <br>
+  <p>sex: {{ sex }}</p>
+  <hr>
+  <br>
+
+  <!--
+  如果 value属性不写，默认取值是 option中的值，请选择 这项要加 disabled
+  如果 select是多选框，则数据类型必须是 数组
+  select 单选用 ‘’ 字符串
+				多选 multiple 用数组 []
+  -->
+  <select v-model="arr" multiple>
+    <option value="" disabled>请选择</option>
+    <option value="1">你好</option>
+    <option value="2">吃饭</option>
+    <option value="3">爬山</option>
+    <option value="4">捉鱼</option>
+  </select>
+  <p>{{ arr }}</p>
+</div>
+
+
+<script src="../assets/vue/vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      sex: '男',
+      // sex: false, 默认都不选，点那个选哪个
+      arr: []
+    }
+  });
+
+</script>
+
+
+
+
+</body>
+</html>

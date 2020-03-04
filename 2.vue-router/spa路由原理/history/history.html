@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>History 路由原理</title>
+  <style>
+    a {
+      display: inline-block;
+      padding: 10px 15px;
+      border: 1px dashed lightcoral;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>history.pushState</h1>
+  <h3><a class="link a">a.html</a></h3>
+  <h3>
+    <mark><a class="link b">b.html</a></mark>
+  </h3>
+</div>
+
+<script>
+const link = document.querySelectorAll('.link')
+// 1 注册路由
+link.forEach(item => {
+  item.addEventListener('click', ev => {
+    ev.preventDefault()
+    let text = item.textContent
+
+    // history.pushState(stateObject, title, url)
+    window.history.pushState({name: 'api'}, text, text)
+  }, false)
+})
+
+// 2 监听路由
+window.addEventListener('popstate', ev => {
+  let obj = {location: location.href, state: ev.state}
+  console.log('popstate', obj)
+}, false)
+
+</script>
+</body>
+</html>

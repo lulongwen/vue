@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue.filters</title>
+</head>
+<body>
+  <div id="app">
+    <p>
+      {{ msg | double }}
+  
+      {{ msg | double('2', 30) }}
+
+      {{price | currency('$')}}
+    </p>
+  </div>
+
+<script>
+  Vue.filter('double', function(num){
+    return num < 10 ? `0${num}` : `${num}`;
+  });
+
+
+  Vue.filter('double', function(num,a,b){
+    console.log(num, a, b)
+    return num < 10 ? `0${num}` : `${num}`;
+  })
+
+  Vue.filter('currency', function(val=0, unit='￥') {
+    return `${unit} ${val}`
+  })
+
+  const vm = new Vue({
+    el: '#app',
+    data: {
+      price: 300
+    }
+  })
+</script>
+</body>
+</html>

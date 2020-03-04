@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vue v-if v-else 流程控制</title>
+</head>
+<body>
+<div id="app">
+  <h3>
+    v-if 判断是否加载，为 true加载，false加载 v-else<br>
+    v-show 修改 CSS display 属性 block & none
+  </h3>
+
+
+  <h3>
+    v-show 不支持 template，v-show必须是个真实的标签
+    <br>
+    v-if 支持 template
+  </h3>
+  <mark>template 无意义的标签，页面不会渲染</mark>
+  <div class=tags>
+    <template v-for="item in arr">
+      <a v-show=""></a>
+    </template>
+  </div>
+
+
+  <button @click="show()">登录</button>
+</div>
+
+
+<script src="../assets/js/vue.min.js"></script>
+<script>
+const array = [
+  {
+    'path': 'info-msg',
+    'name': 'info-msg',
+    'title': '基础资料',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoMsg',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-customer',
+    'name': 'info-customer',
+    'title': '客户车辆',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoCustomer',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-material',
+    'name': 'info-material',
+    'title': '材料信息',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoMaterial',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-project',
+    'name': 'info-project',
+    'title': '项目信息',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoProject',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-supplier',
+    'name': 'info-supplier',
+    'title': '供应商信息',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoSupplier',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-insurer',
+    'name': 'info-insurer',
+    'title': '保险公司',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoInsurer',
+    'meta': {
+      'requireAuth': true
+    }
+  },
+  {
+    'path': 'info-package',
+    'name': 'info-package',
+    'title': '套餐设置',
+    'icon': 'ios-paper-outline',
+    'component': 'infos.infoPackage',
+    'meta': {
+      'requireAuth': true
+    }
+  }
+]
+
+new Vue({
+  el: '#app', // 选择器，也称为挂载点
+  data: {  // 数据
+    arr: array
+  },
+  methods: {
+    show () {
+      this.islogin = false
+    }
+  }
+})
+</script>
+</body>
+</html>

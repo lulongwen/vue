@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>vue transition 动画添加class</title>
+    <meta name="keyword" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<link href="/images/css/lulongwen.css" rel="stylesheet">
+<link href="../dist/animate.css" rel="stylesheet">
+<style>
+    .animated{
+        width: 120px;
+        height: 120px;
+        background-color: #f00;
+    }
+</style>
+<script src="/node_modules/google-code-prettify/prettify.js"></script>
+</head>
+<body>
+<div class="row column jquery">
+<div class="large-10 large-centered">
+    <h1>vue transition 动画</h1><hr>
+
+    <button class="button" @click="toggle =!toggle">切换</button>
+
+     <transition enter-active-class="bounceInLeft" leave-active-class="bounceOutRight">
+        <div v-show="toggle" class="animated"></div>
+    </transition> 
+
+    <!-- <transition enter-active-class="animated zoomInLeft" leave-active-class="animated zoomOutRight">
+        <div v-show="toggle" id="box"></div>
+    </transition> -->
+
+    <br><br>
+    <pre>
+    &lt;button class="button" @click="toggle =!toggle">切换&lt;/button>
+
+    &lt;transition enter-active-class="bounceInLeft" leave-active-class="bounceOutRight">
+        &lt;!-- :css="false" 让动画不受其它css影响  -->
+        &lt;div v-show="toggle" class="animated">&lt;/div>
+    &lt;/transition>
+
+    
+    &lt;transition 
+      enter-active-class="animated zoomInLeft"
+      leave-active-class="animated zoomOutRight">
+        &lt;!-- :css="false" 让动画不受其它css影响  -->
+        &lt;div v-show="toggle">&lt;/div>
+    &lt;/transition>
+    </pre>
+    
+
+</div>
+</div>
+
+
+<script src="../../vue/dist/vue.js"></script>
+<script>
+    var vm = new Vue({
+        el: '.jquery', // 选择器
+        data:{  // 数据
+            toggle: true
+        }
+    });
+
+    
+    var pre = document.querySelectorAll('pre');
+    for(let attr of pre){
+        attr.classList.add('prettyprint', 'linenums');
+        PR.prettyPrint();
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>array 监听数组中对象属性的变化</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+<div id="app">
+  <h1>watch  deep</h1>
+
+  <pre>
+  watch: {
+    products: {
+        handler(value, old){
+          console.log(value, old)
+        },
+        deep: true //深度监听
+      }
+  }
+  </pre>
+
+
+  <input type="checkbox" v-model="checkAll"><br>
+  <input type="checkbox" 
+    v-for="item in products"
+    v-model="item.selected">
+
+  <p>{{fullname}}</p>
+
+
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  // watch 数组或对象
+  // https://blog.csdn.net/Sky786905664/article/details/78251898
+  
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      products: [
+        {selected: true, value: 123},
+        {selected: true, value: 'watched'}
+      ],
+      name: 'VUE',
+      lastname: 'Javascript'
+    },
+    watch: {
+      products: {
+        handler(value, old){
+          console.log(value, old)
+        },
+        deep: true //深度监听
+      }
+    }
+  });
+</script>
+</body>
+</html>

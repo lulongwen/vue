@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>template</title>
+</head>
+<body>
+  <div id="app">
+    <Alert></Alert>
+
+    <hr>
+    <Open></Open>
+
+    <hr>
+    <like></like>
+  </div>
+
+  <script src="../assets/vue.js"></script>
+  <script>
+    // 全局组件，不需要注册，所有的全局组件必须写在根实例的前面才会生效
+    // 会存在最终的构建结果之中，增加的无谓的js下载
+    Vue.component('alert', {
+      template: '<button @click="fnClick">谈了一个窗</button>',
+      methods: {
+        fnClick() {
+          console.log('open windows')
+        }
+      }
+    })
+
+    // 全局组件
+    Vue.component('like', {
+      template: '<button @click="toggle">👍点赞效果 {{num}}</button>',
+      data() {
+        return {
+          num: 20,
+          liked: false
+        }
+      },
+      methods: {
+        toggle() {
+          if (!this.liked) this.num++;
+          else this.num--;
+          this.liked = !this.liked
+        }
+      }
+    })
+
+    // 局部组件，需要注册
+    // 在需要使用这个组件时，只需要在Vue根实例里去调用这个组件
+    var Open = {
+      template: '<button @click="fnClick2">打开天窗</button>',
+      methods: {
+        fnClick2() {
+          console.log('天窗打开了')
+        }
+      }
+    }
+
+    const options = {
+      el: '#app',
+      components: {
+        Open: Open
+      }
+    }
+    const vm = new Vue(options)
+  </script>
+</body>
+</html>

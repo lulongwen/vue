@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue watch</title>
+</head>
+<body>
+	<div id="app">
+    <button @click="heart='丑的'">变丑</button>
+    <button @click="heart='碎了'">心碎</button>
+    {{heart}}
+	</div>
+
+	<script src="./vue.js"></script>
+	<script>
+		/**
+			computed 不能写异步逻辑
+			watch 用起来比computed 简单，某个数据变化了就执行一件事
+			computed 是根据值计算出来的
+			watch 是监控某个值的变化
+			method 是纯事件调用
+		*/
+
+		const vm = new Vue({
+			el:'#app',
+        data:{
+            heart:'美的'
+        },
+        //监控 只要某个值发生变化 就执行某个函数
+        watch:{
+          heart(val){
+            setTimeout((val)=>{
+              alert('啊 你变了', val)	
+            }, 2000)
+          }
+        },
+        //created中一般会调用ajax请求
+        //实例创建后执行
+        created(){ 
+            alert('实例创建')
+        },
+         //当数据渲染页面完成后执行
+        mounted(){
+            alert('挂载后'); //获取真实dom
+        }
+		})
+	</script>
+</body>
+</html>

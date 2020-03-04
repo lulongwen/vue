@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue 阻止默认事件</title>
+    <style>
+        input{
+            width: 300px;
+            padding: 15px 10px;
+            border: 1px solid #ddd;
+            color:#333;
+            outline:none;
+        }
+        div{
+            width: 80%;
+            height: 600px;
+            background-color: #00ccff;
+        }
+    </style>
+</head>
+<body>
+    <h1> v-on: 简写 @ </h1>
+    <p>
+        &lt;input type="text" @keydown.13="show($event)"> <br>
+        &lt;input type="text" @keydown.enter="show($event)">
+    </p>
+    <div class="box" @contextmenu="show($event)">
+        <h3>阻止右键菜单</h3>
+    </div>
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+    var vm = new Vue({
+        el: '.box', // 选择器
+        data:{  // 数据
+            txt: ''
+        },
+        methods: {  // 事件
+            show: function(ev){
+                // 阻止默认事件，右键菜单
+                ev.preventDefault();
+
+                // 阻止事件冒泡
+                ev.stoppropagatioin();
+            }
+        }
+    });
+</script>
+</body>
+</html>

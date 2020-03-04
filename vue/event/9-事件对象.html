@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue事件冒泡-事件捕获</title>
+  <style>
+    input {
+      width: 300px;
+      padding: 15px 10px;
+      border: 1px solid #ddd;
+      color: #333;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+<h1> v-on: 简写 @ </h1>
+<p>
+  &lt;button v-on:click="show()">点击弹窗&lt;/button>
+  <br>简写为：<br>
+  &lt;button @click="show()">点击弹窗&lt;/button>
+</p>
+<div class="box">
+  <input type="text" @keydown="show($event)">
+</div>
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '.box', // 选择器
+    data: {  // 数据
+      txt: ''
+    },
+    methods: {  // 事件
+      show: function (ev) {
+        // 这个 ev和 JS的事件一样
+        if (ev.keyCode == 13) {
+          alert('回车键按下了')
+        }
+        console.log(ev.keyCode);
+      }
+    }
+  });
+</script>
+</body>
+</html>

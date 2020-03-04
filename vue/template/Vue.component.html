@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue.component() 声明全局组件</title>
+</head>
+<body>
+
+<div id="app">
+  <h1>定义组件的2种方式：1 全局组件，2 局部组件</h1>
+  <h3>父级元素：{{ text }}</h3>
+
+  <my-aaa></my-aaa>
+
+  <my-button></my-button>
+  <my-button></my-button>
+  <my-button></my-button>
+
+  <br><br>
+  <pre>
+    全局组件的三部曲
+    1 创建组件 template
+    2 声明组件 Vue.component('name', {})
+    3 使用组件 my-header
+
+
+    1 组件名不要带有大写，多个单词中间用中划线 -
+    2 只要组件名和定义名字相同是可以的，首字母可以大写
+    3 HTML 中采用中划线分割开命名，例如 my-header  HTML
+    4 JS中 可以用驼峰命名法，例如 myHeader  JS
+
+
+    组件分类：页面级的组件
+      1 一个页面是一个组件
+      2 将可复用的部分抽离出来，基础组件可复用
+      3 一个自定义的标签， Vue就会把它看成是一个组件 div span header section
+          vue可以给这些标签赋予一定含义
+
+      4 一个 .vue文件就是一个组件，用于 Vue CLI开发
+
+    组件的好处
+      提高开发效率
+      方便重复使用
+      便于协同开发
+      更容易管理和维护
+  </pre>
+</div>
+
+
+<!-- template 内容很多就用 template标签抽离出来 1 创建组件 -->
+<template id="myheader">
+  <section>
+    <h3 class="list-header">这是template 的标题</h3>
+    <strong>声明组件的数据 {{msg}}</strong>
+  </section>
+</template>
+
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+
+  // 1 创建组件， 一个对象可以看成是一个组件
+  const HOME = {
+    template: '#myheader',
+    data(){
+      // 组件中的数据必须是函数类型，返回一个实例作为组件的数据
+      return {
+        msg: '我很帅的'
+      }
+    },
+    methods: {},
+  };
+
+  //  2 声明组件
+  // 不用挂载到 Vue() 实例上， my-aaa 组件的名字，不能用原生的 HTML标签
+  Vue.component('my-aaa', HOME);
+
+
+  /* 对象的写法，Vue.component() 声明组件，替代1.0 的 Vue.extend()
+  Vue.template('my-aaa', {
+    template: '#myheader',
+    data(){
+      return {
+        msg: '我很帅'
+      }
+    },
+    methods: {}
+  });
+  */
+
+
+  // 根实例
+  new Vue({
+    el: '#app', // 选择器
+    data: {  // 数据
+      text: '这是大标题呀'
+    },
+
+    // 局部组件
+    components: {
+      'MyButton': {
+        data () {
+          return { msg: '点击呀' }
+        },
+        template: `<button>{{msg}}</button>`
+      }
+    }
+  })
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>表格拖拽排序</title>
+  <style>
+    body {
+      padding: 30px
+    }
+    .table {
+      width: 500px;
+      border: 1px solid #ddd;
+      border-collapse: collapse;
+      border-spacing: 0
+    }
+    table tr {
+      cursor: move;
+    }
+    table td {
+      padding: 5px 10px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>学生姓名</th>
+        <th @click="active=1, flag *= -1">语文成绩</th>
+        <th @click="active=2, flag *= -1">数学成绩</th>
+        <th @click="active=3, flag *= -1">英语成绩</th>
+      </tr>
+    </thead>
+    <tbody v-draggable="lists">
+      <tr v-for="l in sortList" :key="l.id">
+        <td>{{l.name}}</td>
+        <td>{{l.chinese}}</td>
+        <td>{{l.math}}</td>
+        <td>{{l.english}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+
+  <script src="../vue.js"></script>
+  <script src="./sortable.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      directives: {
+        // el是当前元素 value是当前的传进来的值 vnode 虚拟节点
+        draggable: {
+          // 执行一次，数据是异步加载过来的
+          // 默认是bind方法 ，也可以写成update
+          // https://cn.vuejs.org/v2/guide/custom-directive.html
+          update(el, { value }, vnode) {
+            console.log(value)
+
+            Sortable.create(el, {
+              animation: 200,
+              onEnd: (e) => { // 拖拽完毕后
+                console.log('ev', e)
+                let {oldIndex, newIndex} = e
+                let current = value[oldIndex];// 当前拖拽的那个，开始的 
+                
+                // 把当前这一项从数组中删除这一项
+                value.splice(oldIndex, 1);
+                // 把这一项添加到新的位置上
+                value.splice(newIndex, 0, current);
+                // 最后可以拿到拖拽后的数据 value
+              }
+            })
+          }
+        }
+      },
+      
+      computed: {
+        // computed 计算属性 根据其他属性计算而来的 虽然是属性但是要写成函数
+        // get 和set  默认调用的是get方法
+        // 计算属性拥有缓存 ,如果依赖的属性不发生变化 就不会重新计算，依赖数据不变，数据不会多次执行
+        // methods 调用方法时，别的属性变化 也会导致方法重新执行，会多次执行
+        sortList () {
+          if (this.active === 1) {
+            return this.lists.sort((a, b) => (a.chinese - b.chinese) * this.flag)
+          }
+          if (this.active === 2) {
+            return this.lists.sort((a, b) => (a.math - b.math) * this.flag)
+          }
+          if (this.active === 3) {
+            return this.lists.sort((a, b) => (a.english - b.english)* this.flag)
+          }
+
+          return this.lists
+        }
+      },
+
+      data: {
+        // 初始化数据，必须是空数组
+        lists: [],
+        active: 0,
+        flag: -1
+      },
+      
+      mounted () {
+        this.lists = [
+          { id: 1, name: '张三', chinese: 99, english: 30, math: 88 },
+          { id: 2, name: '李四', chinese: 69, english: 90, math: 32 },
+          { id: 3, name: '王五', chinese: 88, english: 72, math: 65 }
+        ]
+      }
+    })
+  </script>
+</body>
+</html>

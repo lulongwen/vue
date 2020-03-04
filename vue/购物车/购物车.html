@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue 购物车</title>
+	<style>
+		.cart{
+      width: 50px;
+      height: 50px;
+      background: orangered;
+      position: fixed;
+      right: 0;
+      bottom:100px;
+      color: #fff;
+      text-align: center;
+      font-size: 20px;
+      line-height: 34px;
+    }
+    .cart span{
+      font-size: 15px;
+      line-height: 16px;
+      display: block;
+    }
+	</style>
+</head>
+<body>
+	<div id="app">
+		<ul class="car-list">
+			<li class="col-md-3"
+				v-for="(product, index) of products"
+				:key="`product_${index}`"
+				draggable="true"
+				@dragstart="start($event, index, product)">
+				<h5>{{product.productName}}</h5>
+				<img :src="product.productCover" ref="img">
+				<footer>价格: {{product.productPrice}}</footer>
+			</li>
+		</ul>
+
+		<table class="table" v-show="show">
+      <tr>
+        <th>全选 <input type="checkbox" v-model="all"></th>
+        <th>商品名称</th>
+        <th>商品数量</th>
+        <th>商品价格</th>
+        <th>商品小计</th>
+        <th>操作</th>
+      </tr>
+      <tr v-for="cart in carts">
+        <td><input type="checkbox" v-model="cart.isSelect"></td>
+        <td>{{cart.productName}}</td>
+        <td>
+          <button @click="cart.productCount--" :disabled="cart.productCount==1">-</button>
+          <input type="text" v-model="cart.productCount">
+          <button @click="cart.productCount++">+</button>
+        </td>
+        <td>{{cart.productPrice}}</td>
+        <td>{{cart.productPrice*cart.productCount | toInt}}</td>
+        <td>
+        	<button class="btn btn-danger btn-xs" @click="remove(cart)">删除</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          总价：{{total | toInt}}
+        </td>
+      </tr>
+    </table>
+
+		<footer class="cart" @dragover.prevent @drop="drop" @click="show = !show">
+			<span>{{count}}</span>
+		</footer>
+		
+	</div>
+	<script src="./vue.js"></script>
+	<script>
+		const vm = new Vue({
+			el: '#app',
+			data: {
+				products: [],
+				current: '', // 当前拖动的元素
+				carts: JSON.parse(localStorage.getItem('carts')) || [],
+				show: false,
+			},
+			computed: {
+				/* 如果 products中有一个元素 isSelected是false  all则为false
+					.every 如果其中有一个返回为false 结果就是false
+				*/
+				all: {
+					get() {
+						return this.carts.every(item => item.isSelect)
+					},
+					set(val) {
+						this.carts.forEach(item => item.isSelect = val)
+					}
+				},
+				total() {
+					return this.carts.reduce((prev, next) => {
+						// 是否选中
+						return next.isSelect ?
+							prev + next.productCount * next.productPrice :
+							prev
+					}, 0)
+				},
+				count() {
+					return this.carts.reduce((prev, next) => {
+						return prev + next.productCount
+					}, 0)
+				}
+			},
+			filters: {
+				toInt(input) {
+					return `$ ${input}.toFixed(2)`
+				}
+			},
+			watch: {
+				// 购物车变化，设置本地存储
+				carts: {
+					handler() {
+						localStorage.setItem('carts', JSON.stringify(this.carts))
+					},
+					deep: true,
+				}
+			},
+			methods: {
+				remove(cart) {
+					// filter 如果返回true 表示留下并且放到一个新的数组里
+					this.carts = this.carts.filter(item => item != cart)
+				},
+				// drag start
+				start(ev, index, product) {
+					/**
+					如果不传 product, 获取当前拖动的那个元素，传了，就用 setData
+					let product = {...this.products[index], productCount: 1, isSelect: true}
+					this.current = product
+					*/
+
+					ev.dataTransfter.setData('p', JSON.stringify(product))
+					ev.dataTransfter.setDragImage(this.$refs.img[index], 0, 0)
+				},
+				drop(ev) {
+					// 如果存在，数量+1
+					let product = JSON.parse(ev.dataTransfter.getData('p'))
+					if (this.carts.some(item => item.id === product.id)) {
+						this.carts.forEach(item => {
+							console.log('item', item)
+							if (item.id === product.id) {
+								item.productCount++;
+							}
+						})
+					}
+					else this.carts.push(product)
+				},
+
+				getProduct() {
+					// 箭头函数中没有 this指向
+					axios.get('./product.json')
+					.then(res => {
+						this.products = res.data
+					})
+				}
+			},
+			created() {
+				this.getProduct()
+			}
+		})
+	</script>
+</body>
+</html>

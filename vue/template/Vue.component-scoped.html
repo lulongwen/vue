@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue.component() 声明 局部组件</title>
+  <style>
+    body {
+      font: 1em/1.2em 'Fira Code Medium', '微软雅黑';
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <h3>父级元素：{{ text }}</h3>
+
+  <component-one></component-one>
+  <component2></component2>
+
+  <br><br><hr>
+  <pre>
+    局部组件的三部曲
+    1 创建组件 template
+    2 注册组件 Vue.component('name', {})
+    3 使用组件 my-header
+
+    组件是相互独立的，不能直接跨作用域，实例也是一个组件
+    组件拥有生命周期钩子函数
+      子组件不能直接使用父组件的数据，要通过组件间的数据交互
+    组件理论上可以无限级嵌套
+
+
+    1 组件名不要带有大写，多个单词中间用中划线 -
+    2 只要组件名和定义名字相同是可以的，首字母可以大写
+    3 HTML 中采用中划线分割开命名，例如 my-header  HTML
+    4 JS中 可以用驼峰命名法，例如 myHeader  JS
+
+    组件分类：页面级的组件
+      1 一个页面是一个组件
+      2 将可复用的部分抽离出来，基础组件可复用
+      3 一个自定义的标签， Vue就会把它看成是一个组件 div span header section
+          vue可以给这些标签赋予一定含义
+
+      4 一个 .vue文件就是一个组件，用于 Vue CLI开发
+
+    组件的好处
+      提高开发效率
+      方便重复使用
+      便于协同开发
+      更容易管理和维护
+  </pre>
+</div>
+
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  let obj = {
+    school: '很高的学校'
+  };
+
+  // JS 可以使用驼峰，HTML使用中划线 component-one
+  let componentOne = {
+    template: `<header @click="fn">组件 {{school}} 点击看变化</header>`,
+    data(){
+      return obj;
+    },
+    methods: {
+      fn() {
+        this.school = 'hello world'
+      }
+    }
+  };
+
+  let component2 = {
+    template: `<h2>组件222 {{school}}</h2>`,
+    data(){
+      return obj;
+    }
+  };
+
+
+  const VM = new Vue({
+    el: '#app',
+    components: { // 注册组件
+      componentOne,
+      component2
+    },
+    data: {
+      text: '这是大标题呀'
+    }
+  });
+
+
+</script>
+</body>
+</html>

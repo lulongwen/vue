@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue.mixin 混合</title>
+</head>
+<body>
+  <div id="app">
+    <Tooltip></Tooltip>
+
+    <br>
+    <Popup></Popup>
+  </div>
+  <script src="../assets/vue.js"></script>
+  <script>
+    // 提取公共的，然后混合
+    const base = {
+      methods: {
+        fnShow() {
+          this.modal.show = true
+        },
+        fnHide() {
+          this.modal.show = false
+        },
+        toggle() {
+          this.modal.show = !this.modal.show
+        }
+      },
+      data() {
+        return {
+          modal: {
+            show: false
+          }
+        }
+      }
+    }
+
+    Vue.component('tooltip', {
+      // 多个对象，vue会合并, data & methods 同名方法属性会合并
+      mixins: [base],
+      data() {
+        return {
+          // 指定的属性会 覆盖 base的 mixin
+          modal: {
+            show: true
+          }
+        }
+      },
+      template: `<div>
+        <span @mouseenter="fnShow" @mouseleave="fnHide">🦞龙虾</span>
+        <footer v-if="modal.show">今天有空去抓🦞</footer>
+      </div>`,
+    })
+
+    Vue.component('popup', {
+      mixins: [base],
+      template: `<div>
+        <button @click="toggle">POPUP</button>
+        <div v-if="modal.show">
+          <span @click="fnHide">X</span>
+          <h5>弹窗的标题🚢</h5>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Minus, tempore.
+        </div>
+      </div>`,
+    })
+
+    const options = {
+      el: '#app'
+    }
+    const vm = new Vue(options)
+  </script>
+</body>
+</html>

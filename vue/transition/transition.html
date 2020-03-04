@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vue transition动画 是个组件</title>
+  <meta name="keyword" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <style>
+    #box {
+      width: 120px;
+      height: 120px;
+      background-color: #f00;
+    }
+
+    /* 动画 */
+    .fade-enter-active, .fade-leave-active {
+      transition: all 1s ease;
+    }
+
+    .fade-enter, .fade-leave-to {
+      opacity: 0;
+      background-color: #f0f;
+      transform: translateX(500px)
+    }
+
+    /*
+     fade-enter, fade-leave 都是一瞬间
+     <transition name="fade" mode="out-in"> default in-out
+        <router-view />
+     </transition>
+
+    .fade-enter{
+      opacity: 0;
+    }
+    .fade-enter-active{
+      transition: opacity 300ms linear;
+    }
+    .fade-leave{
+      opacity: 1;
+    }
+    .fade-leave-active{
+      opacity: 0;
+      transition: opacity 300ms linear;
+    }
+
+
+    .fade-enter{ opacity: 0 }
+    .fade-enter-active{ transition: opacity 3s; }
+
+    .fade-leave-to{ opacity: 0 }
+    .fade-leave-active{ transition: opacity: 3s; }
+    1 动画创建时， 第一帧加上 fade-enter fade-enter-active
+      第二帧加上 fade-enter-to， 移除 fade-enter
+    */
+  </style>
+</head>
+<body>
+<div class="row column jquery">
+  <div class="large-10 large-centered">
+    <h1>vue transition 动画</h1>
+    <hr>
+
+    <button class="button" @click="toggle =!toggle">切换</button>
+    <transition name="fade">
+      <div id="box" v-show="toggle"></div>
+    </transition>
+  </div>
+</div>
+
+
+<script src="../../vue/dist/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '.jquery', // 选择器
+    data: {  // 数据
+      toggle: true
+    },
+    methods: {
+      tog() {
+        this.toggle = !this.toggle;
+      }
+    }
+  });
+</script>
+</body>
+</html>

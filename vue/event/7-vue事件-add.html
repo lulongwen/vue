@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue 事件</title>
+    <style>
+<html lang="en">
+<head>
+        button{
+            padding: 15px 35px;
+            border:none;
+            background-color: #ccc;
+            color:#333;
+            outline:none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1> v-on: 简写 @ </h1>
+    <p>
+        &lt;button v-on:click="show()">点击弹窗&lt;/button>
+        <br>简写为：<br>
+        &lt;button @click="show()">点击弹窗&lt;/button>
+    </p>
+    <div class="box">
+        <button @click="add()">点击添加数据</button>
+        <br>
+        <ul>
+            <li v-for="(val, key) in arr">
+                {{ val }}
+            </li>
+        </ul>
+    </div>
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+    var vm = new Vue({
+        el: '.box', // 选择器
+        data:{  // 数据
+            arr: ['apple', 'orange', 'pear', 'mango', 'xifanlian']
+        },
+        methods: {
+            add: function(){
+                console.log( this.arr )
+                this.arr.push('西瓜');
+            }
+        }
+    });
+</script>
+</body>
+</html>

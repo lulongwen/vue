@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>vue 核心知识点</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="vue 核心知识点" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <link rel="stylesheet" href="docs/assets/css/vue.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <a id="home" href="/">🏠</a>
+    <script>
+      window.$docsify = {
+        // homepage: '1.vue-core/core.md',
+        loadSidebar: true,
+        subMaxLevel: 3,
+        maxLevel: 4, //最大的内容表级别
+        alias: {
+          '/.*/_sidebar.md': '/_sidebar.md'
+        },
+        mergeNavbar: true,
+        formatUpdated: '{MM}/{DD} {HH}:{mm}',
+        // loadNavbar: true
+        repo: 'https://github.com/lulongwen/Vue/',
+        search: {
+          maxAge: 86400000, // 过期时间，单位毫秒，默认一天
+          paths: 'auto', // or 'auto'
+          placeholder: '输入关键词搜索',
+          // 支持本地化
+          placeholder: {
+            '/zh-cn/': '搜索',
+            '/': '输入关键词搜索'
+          },
+          noData: '没有搜索结果!',
+          // 搜索标题的最大程级, 1 - 6
+          depth: 4
+        },
+        copyCode: {
+          buttonText : '复制',
+          errorText  : '错误',
+          successText: 'OK'
+        }
+
+        // pagination: { // 分页导航
+        //   previousText: '上一章节',
+        //   nextText: '下一章节',
+        //   crossChapter: true,
+        //   crossChapterText: true,
+        // }
+      }
+    </script>
+    <script src="docs/assets/js/docsify.min.js"></script>
+    <script src="docs/assets/js/docsify-copy-code-min.js"></script>
+    <script src="docs/assets/js/search-min.js"></script>
+    <!-- <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script> -->
+    <!-- <script src="//unpkg.com/prismjs/components/prism-bash.min.js"></script> -->
+  </body>
+</html>

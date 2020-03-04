@@ -1,0 +1,131 @@
+<html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="google-site-verification" content="cCHsgG9ktuCTgWgYfqCJql8AeR4gAne4DTZqztPoirE"><meta name="apple-itunes-app" content="app-id=987739104"><meta name="baidu-site-verification" content="qiK2a1kcFc"><meta name="360-site-verification" content="4c3c7d57d59f0e1a308462fbc7fd7e51"><meta name="sogou_site_verification" content="c49WUDZczQ"><title data-vue-meta="true">剖析 Vue.js 内部运行机制 - 染陌同学 - 掘金小册</title><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/manifest.6bf42775ff3ede98a73a.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/vendor.35e0b2c7b9da74dd2322.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/app.1d801972a0d11ad831f3.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" as="style"><link rel="apple-touch-icon" sizes="180x180" href="https://b-gold-cdn.xitu.io/favicons/v2/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-16x16.png"><link rel="manifest" href="https://b-gold-cdn.xitu.io/favicons/v2/manifest.json"><link rel="mask-icon" href="https://b-gold-cdn.xitu.io/favicons/v2/safari-pinned-tab.svg" color="#5bbad5"><link rel="shortcut icon" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon.ico"><meta name="msapplication-config" content="https://b-gold-cdn.xitu.io/favicons/v2/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="search" title="掘金" href="https://b-gold-cdn.xitu.io/conf/search.xml" type="application/opensearchdescription+xml"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/ionicons/2.0.1/css/ionicons.min.css"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/asset/fw-icon/1.0.9/iconfont.css"><link href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" rel="stylesheet"><script async="" src="https://hm.baidu.com/hm.js?93bbd335a208870aa1f296bcd6842e5e"></script><script async="" src="//www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://assets.growingio.com/vds.js"></script><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/12.fbad00127b15eab47be6.js"></script><meta data-vmid="keywords" name="keywords" content="掘金,稀土,Vue.js,微信小程序,Kotlin,RxJava,React Native,Wireshark,敏捷开发,Bootstrap,OKHttp,正则表达式,WebGL,Webpack,Docker,MVVM" data-vue-meta="true"><meta data-vmid="description" name="description" content="掘金是一个帮助开发者成长的社区，是给开发者用的 Hacker News，给设计师用的 Designer News，和给产品经理用的 Medium。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货，其中包括：Android、iOS、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时，掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 GitHub、StackOverflow、开源中国的用户，我们相信你也可以在这里有所收获。" data-vue-meta="true"><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/6.a62bf3ae38fb5b6d3c50.js"></script></head><body><div data-v-41acfafa="" data-v-decff8c4="" class="section-content"><div data-v-41acfafa="" class="section-page book-section-view"><div data-v-41acfafa="" class="entry-content article-content"><h1 class="heading" data-id="heading-0">响应式系统的依赖收集追踪原理</h1>
+<h2 class="heading" data-id="heading-1">为什么要依赖收集？</h2>
+<p><strong>先举个栗子🌰</strong></p>
+<p>我们现在有这么一个 Vue 对象。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">new</span> Vue({
+    <span class="hljs-attr">template</span>: 
+        <span class="hljs-string">`&lt;div&gt;
+            &lt;span&gt;{{text1}}&lt;/span&gt; 
+            &lt;span&gt;{{text2}}&lt;/span&gt; 
+        &lt;div&gt;`</span>,
+    <span class="hljs-attr">data</span>: {
+        <span class="hljs-attr">text1</span>: <span class="hljs-string">'text1'</span>,
+        <span class="hljs-attr">text2</span>: <span class="hljs-string">'text2'</span>,
+        <span class="hljs-attr">text3</span>: <span class="hljs-string">'text3'</span>
+    }
+});
+</code></pre><p>然后我们做了这么一个操作。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">this</span>.text3 = <span class="hljs-string">'modify text3'</span>;
+</code></pre><p>我们修改了 <code>data</code> 中 <code>text3</code> 的数据，但是因为视图中并不需要用到 <code>text3</code> ，所以我们并不需要触发上一章所讲的 <code>cb</code> 函数来更新视图，调用 <code>cb</code> 显然是不正确的。</p>
+<p><strong>再来一个栗子🌰</strong></p>
+<p>假设我们现在有一个全局的对象，我们可能会在多个 Vue 对象中用到它进行展示。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> globalObj = {
+    <span class="hljs-attr">text1</span>: <span class="hljs-string">'text1'</span>
+};
+
+<span class="hljs-keyword">let</span> o1 = <span class="hljs-keyword">new</span> Vue({
+    <span class="hljs-attr">template</span>:
+        <span class="hljs-string">`&lt;div&gt;
+            &lt;span&gt;{{text1}}&lt;/span&gt; 
+        &lt;div&gt;`</span>,
+    <span class="hljs-attr">data</span>: globalObj
+});
+
+<span class="hljs-keyword">let</span> o2 = <span class="hljs-keyword">new</span> Vue({
+    <span class="hljs-attr">template</span>:
+        <span class="hljs-string">`&lt;div&gt;
+            &lt;span&gt;{{text1}}&lt;/span&gt; 
+        &lt;div&gt;`</span>,
+    <span class="hljs-attr">data</span>: globalObj
+});
+</code></pre><p>这个时候，我们执行了如下操作。</p>
+<pre><code class="hljs javascript" lang="javascript">globalObj.text1 = <span class="hljs-string">'hello,text1'</span>;
+</code></pre><p>我们应该需要通知 <code>o1</code> 以及 <code>o2</code> 两个vm实例进行视图的更新，「依赖收集」会让 <code>text1</code> 这个数据知道“哦～有两个地方依赖我的数据，我变化的时候需要通知它们～”。</p>
+<p>最终会形成数据与视图的一种对应关系，如下图。</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2018/1/5/160c4572fdd738f2?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="610" data-height="270" src="https://user-gold-cdn.xitu.io/2018/1/5/160c4572fdd738f2?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>接下来我们来介绍一下「依赖收集」是如何实现的。</p>
+<h2 class="heading" data-id="heading-2">订阅者 Dep</h2>
+<p>首先我们来实现一个订阅者 Dep ，它的主要作用是用来存放 <code>Watcher</code> 观察者对象。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dep</span> </span>{
+    <span class="hljs-keyword">constructor</span> () {
+        <span class="hljs-comment">/* 用来存放Watcher对象的数组 */</span>
+        <span class="hljs-keyword">this</span>.subs = [];
+    }
+
+    <span class="hljs-comment">/* 在subs中添加一个Watcher对象 */</span>
+    addSub (sub) {
+        <span class="hljs-keyword">this</span>.subs.push(sub);
+    }
+
+    <span class="hljs-comment">/* 通知所有Watcher对象更新视图 */</span>
+    notify () {
+        <span class="hljs-keyword">this</span>.subs.forEach(<span class="hljs-function">(<span class="hljs-params">sub</span>) =&gt;</span> {
+            sub.update();
+        })
+    }
+}
+</code></pre><p>为了便于理解我们只实现了添加的部分代码，主要是两件事情：</p>
+<ol>
+<li>用 <code>addSub</code> 方法可以在目前的 <code>Dep</code> 对象中增加一个 <code>Watcher</code> 的订阅操作；</li>
+<li>用 <code>notify</code> 方法通知目前 <code>Dep</code> 对象的 <code>subs</code> 中的所有 <code>Watcher</code> 对象触发更新操作。</li>
+</ol>
+<h2 class="heading" data-id="heading-3">观察者 Watcher</h2>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Watcher</span> </span>{
+    <span class="hljs-keyword">constructor</span> () {
+        <span class="hljs-comment">/* 在new一个Watcher对象时将该对象赋值给Dep.target，在get中会用到 */</span>
+        Dep.target = <span class="hljs-keyword">this</span>;
+    }
+
+    <span class="hljs-comment">/* 更新视图的方法 */</span>
+    update () {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"视图更新啦～"</span>);
+    }
+}
+
+Dep.target = <span class="hljs-literal">null</span>;
+</code></pre><h2 class="heading" data-id="heading-4">依赖收集</h2>
+<p>接下来我们修改一下 <code>defineReactive</code> 以及 Vue 的构造函数，来完成依赖收集。</p>
+<p>我们在闭包中增加了一个 Dep 类的对象，用来收集 <code>Watcher</code> 对象。在对象被「读」的时候，会触发 <code>reactiveGetter</code> 函数把当前的 <code>Watcher</code> 对象（存放在 Dep.target 中）收集到 <code>Dep</code> 类中去。之后如果当该对象被「<strong>写</strong>」的时候，则会触发 <code>reactiveSetter</code> 方法，通知 <code>Dep</code> 类调用 <code>notify</code> 来触发所有 <code>Watcher</code> 对象的 <code>update</code> 方法更新对应视图。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">defineReactive</span> (<span class="hljs-params">obj, key, val</span>) </span>{
+    <span class="hljs-comment">/* 一个Dep类对象 */</span>
+    <span class="hljs-keyword">const</span> dep = <span class="hljs-keyword">new</span> Dep();
+    
+    <span class="hljs-built_in">Object</span>.defineProperty(obj, key, {
+        <span class="hljs-attr">enumerable</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">configurable</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">get</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">reactiveGetter</span> (<span class="hljs-params"></span>) </span>{
+            <span class="hljs-comment">/* 将Dep.target（即当前的Watcher对象存入dep的subs中） */</span>
+            dep.addSub(Dep.target);
+            <span class="hljs-keyword">return</span> val;         
+        },
+        <span class="hljs-attr">set</span>: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">reactiveSetter</span> (<span class="hljs-params">newVal</span>) </span>{
+            <span class="hljs-keyword">if</span> (newVal === val) <span class="hljs-keyword">return</span>;
+            <span class="hljs-comment">/* 在set的时候触发dep的notify来通知所有的Watcher对象更新视图 */</span>
+            dep.notify();
+        }
+    });
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Vue</span> </span>{
+    <span class="hljs-keyword">constructor</span>(options) {
+        <span class="hljs-keyword">this</span>._data = options.data;
+        observer(<span class="hljs-keyword">this</span>._data);
+        <span class="hljs-comment">/* 新建一个Watcher观察者对象，这时候Dep.target会指向这个Watcher对象 */</span>
+        <span class="hljs-keyword">new</span> Watcher();
+        <span class="hljs-comment">/* 在这里模拟render的过程，为了触发test属性的get函数 */</span>
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'render~'</span>, <span class="hljs-keyword">this</span>._data.test);
+    }
+}
+</code></pre><h2 class="heading" data-id="heading-5">小结</h2>
+<p>总结一下。</p>
+<p>首先在 <code>observer</code> 的过程中会注册 <code>get</code> 方法，该方法用来进行「<strong>依赖收集</strong>」。在它的闭包中会有一个 <code>Dep</code> 对象，这个对象用来存放 Watcher 对象的实例。其实「<strong>依赖收集</strong>」的过程就是把 <code>Watcher</code> 实例存放到对应的 <code>Dep</code> 对象中去。<code>get</code> 方法可以让当前的 <code>Watcher</code> 对象（Dep.target）存放到它的 subs 中（<code>addSub</code>）方法，在数据变化时，<code>set</code> 会调用 <code>Dep</code> 对象的 <code>notify</code> 方法通知它内部所有的 <code>Watcher</code> 对象进行视图更新。</p>
+<p>这是 <code>Object.defineProperty</code> 的 <code>set/get</code> 方法处理的事情，那么「<strong>依赖收集</strong>」的前提条件还有两个：</p>
+<ol>
+<li>触发 <code>get</code> 方法；</li>
+<li>新建一个 Watcher 对象。</li>
+</ol>
+<p>这个我们在 Vue 的构造类中处理。新建一个 <code>Watcher</code> 对象只需要 new 出来，这时候 <code>Dep.target</code> 已经指向了这个 new 出来的 <code>Watcher</code> 对象来。而触发 <code>get</code> 方法也很简单，实际上只要把 render function 进行渲染，那么其中的依赖的对象都会被「读取」，这里我们通过打印来模拟这个过程，读取 test 来触发 <code>get</code> 进行「依赖收集」。</p>
+<p>本章我们介绍了「依赖收集」的过程，配合之前的响应式原理，已经把整个「响应式系统」介绍完毕了。其主要就是 <code>get</code> 进行「依赖收集」。<code>set</code> 通过观察者来更新视图，配合下图仔细捋一捋，相信一定能搞懂它！</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2017/12/19/1606edad5ca9e23d?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="1280" data-height="638" src="https://user-gold-cdn.xitu.io/2017/12/19/1606edad5ca9e23d?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>注：本节代码参考<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto%2FVueDemo%2Fblob%2Fmaster%2F%25E3%2580%258A%25E5%2593%258D%25E5%25BA%2594%25E5%25BC%258F%25E7%25B3%25BB%25E7%25BB%259F%25E7%259A%2584%25E4%25BE%259D%25E8%25B5%2596%25E6%2594%25B6%25E9%259B%2586%25E8%25BF%25BD%25E8%25B8%25AA%25E5%258E%259F%25E7%2590%2586%25E3%2580%258B.js" rel="nofollow noopener noreferrer">《响应式系统的依赖收集追踪原理》</a>。</p>
+</div><section data-v-41acfafa="" class="book-comments"><div data-v-41acfafa="" class="box-title">留言</div><div data-v-41acfafa="" class="comment-box"><div data-v-efcd2e56="" data-v-41acfafa="" class="comment-form comment-form" id="comment"><div data-v-b2db8566="" data-v-1b9df826="" data-v-efcd2e56="" data-src="https://avatars1.githubusercontent.com/u/25916562?v=4" class="lazy avatar avatar loaded" title="" style="background-image: url(&quot;https://avatars1.githubusercontent.com/u/25916562?v=4&quot;);"></div><textarea data-v-efcd2e56="" placeholder="评论将在后台进行审核，审核通过后对所有人可见" class="content-input" style="overflow: hidden; overflow-wrap: break-word; height: 60px;"></textarea><div data-v-efcd2e56="" class="action-box" style="display: none;"><div data-v-54e3f196="" data-v-efcd2e56="" class="image-uploader image-uploader" style="display: none;"><input data-v-54e3f196="" type="file" class="input"><button data-v-54e3f196="" class="upload-btn"><i data-v-54e3f196="" class="icon ion-image"></i><span data-v-54e3f196="">上传图片</span></button></div><div data-v-efcd2e56="" class="submit-box"><span data-v-efcd2e56="" class="submit-text">Ctrl or ⌘ + Enter</span><button data-v-efcd2e56="" class="submit-btn">评论</button></div></div><!----></div></div><ul data-v-51163f89="" data-v-41acfafa="" st:block="commentList" class="comment-list comment-list"><!----></ul></section></div></div><!----><!----></body></html>

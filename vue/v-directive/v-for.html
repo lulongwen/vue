@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <title>vue v-for遍历数组- v-for遍历对象</title>
+  <style>
+    body {
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>
+    v-for="value in arr" v-for 遍历数组-对象<br>
+    重要： v-text 与 {{ }} 的区别<br>
+    v-for 必须要有  :key，尽量使用唯一值来做 key
+  </h1>
+  <ol>
+    <!-- <li v-for="val in arr" v-text="val"></li>  v-for 取模 -->
+    <li v-for="(val,index) in arr" :class="{odd: index %2}">{{val}}</li>
+  </ol>
+  <hr>
+
+  <h3>v-for="(value, index) in age" 遍历数组</h3>
+  <ul>
+    <li v-for="(value, index) in age">
+      {{ value.age }} => {{value.name}}<br>
+      索引值是： {{ index }}
+    </li>
+  </ul>
+  <hr>
+  <button @click="add">添加数据</button>
+
+
+  <h3>v-for="(val, index) in json" 遍历json</h3>
+  <ul>
+    <li v-for="(val, index) in json" v-text="val"></li>
+  </ul>
+  <hr>
+
+
+  <h3>v-for="(val, key, index) in json" 遍历json</h3>
+  <ul>
+    <li v-for="(val, key, index) in json">
+      val {{val}} <br>
+      key {{ key }} <br>
+      index {{ index }} <br>
+    </li>
+  </ul>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '#app', // 选择器
+
+    data: {  // 数据
+      arr: ['apple', 'orange', 'pear', 'mango', 'xifanlian'],
+      json: {
+        a: 'apple1',
+        b: 'orange2',
+        c: 'pear3',
+        d: 'mango4',
+        e: 'lianwu5'
+      },
+      arr: [
+        {name: 'Jim', age: 32},
+        {name: 'pear', age: 90},
+        {name: 'orange', age: 23},
+        {name: 'LiLy', age: 15}
+      ]
+    },
+    methods: {
+      add() {
+        this.arr.push('peach');
+      }
+    },
+    computed: {
+      mySort() {
+        return this.arr.sort(sortNumber);
+      },
+      age() {
+        return sortName(this.arr, 'age');
+      }
+    }
+  });
+
+
+  // arr 排序
+  function sortNumber(a, b) {
+    return a - b;
+  }
+
+
+  // 数组对象- 传入参数排序
+  function sortName(array, key) {
+    return array.sort(function (a, b) {
+      let x = a[key];
+      let y = b[key];
+      // return (x<y) ? -1 : (x>y)? 1 : 0;
+      return x > y;
+    });
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue 改变data里面的数据</title>
+</head>
+<body>
+  <div id="app">
+    {{ message }}
+  </div>
+
+  <script src="../assets/vue/vue.js"></script>
+  <script>
+    /*
+      vue 会循环data 里面的数据（数据劫持），依次的增加 getter 和 setter
+      使用变量时，必须要初始化，否则新添加的属性不会刷新页面
+      要刷新页面必须用 Vue.set() & vm.set() 属性
+
+      改变data里面数据的方法
+      替换原对象
+      vm.obj = {school: 'sky', name: 'god' }
+
+      去改变数组中的某一项是监控不到的，也不能改变数组的长度去改变数组
+      vm.arr[0] = 100; vm.arr.length =2; // 错误的做法
+      用数组的方法去改变数组，比如 pop, push, shift, unshift, sort, reverse, splice
+     */
+    const vm = new Vue({
+      el: '#app',
+      data:{
+        message: 'VUE DEMO',
+        obj: {},
+        arr: [2, 39, 29, 67,98]
+      },
+      methods:{
+        addItem(){
+          // 更新，不触发渲染
+          this.list[1] = {
+            name: 'apple',
+            price: '1800'
+          }
+        }
+      },
+
+      methods: {
+        addItem(){
+          // 使用 Vue.set() 全局方法，可以改变数据，触发渲染
+          Vue.set(this.list, 1, {
+            name: 'apple',
+            price: '1800'
+          })
+        }
+      }
+    });
+
+    // .$set可以给对象添加 响应式的数据变化
+    vm.$set(vm.obj, 'scroll', 'hight')
+
+    vm.arr = vm.arr.map( item=> item *=2);
+    console.log('vm.arr',vm.arr);
+  </script>
+</body>
+</html>

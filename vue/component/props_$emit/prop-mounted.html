@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue组件</title>
+</head>
+<body>
+
+<!-- 使用 组件 -->
+<div id="box">
+  <h3>父级元素：{{ text }}</h3>
+  <comm-main :msg.sync="text"></comm-main>
+</div>
+
+
+<!-- 组件  -->
+<template id="child">
+  <div>
+    <header>这是子组件标题</header>
+    <button class="button" @click="change">按钮</button>
+    <p>
+      <strong v-text="text"></strong>
+    </p>
+    <ul>
+      <li v-for="(val, index) in obj.item">
+        <a href="http://www.baidu.com"> {{val}}</a>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script src="../assets/js/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '.jquery', // 选择器
+    data: {  // 数据
+      text: '这是父组件的数据'
+    },
+    components: {
+      'comm-main': {
+        props: ['msg'],
+        template: '#child',
+        data() {
+          return {
+            text: '',
+            obj: {
+              item: ['apple', 'orange', 'pear', 'mango']
+            }
+          }
+        },
+        mounted() {
+          this.text = this.msg;
+        },
+        methods: {
+          change() {
+            this.text = '点击后改变了'
+          }
+        }
+      }
+    }
+  });
+
+</script>
+</body>
+</html>

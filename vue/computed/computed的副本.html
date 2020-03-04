@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>computed</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+<div id="app">
+  <input type="text" v-model="val">
+
+  <p>computed: {{valComputed}}</p>
+
+  <p>methods: {{ valFN() }}</p>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      val: ''
+    },
+    // computed 计算属性，每个属性都是一个函数
+    computed:{
+      // 根据值的改变而改变，计算的值，会被缓存
+      valComputed(){
+        return this.val.replace(/\d/g, '');
+      }
+    },
+    methods:{
+      // 每次都会重新去获取值，不会缓存
+      valFN(){
+        return this.val.replace(/\d/g, '');
+      }
+    }
+  });
+</script>
+</body>
+</html>

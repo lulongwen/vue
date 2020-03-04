@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue 事件</title>
+  <style>
+    #app > div {
+      background-color: #eee;
+      width: 300px;
+      height: 300px;
+      padding: 1em;
+    }
+    section {
+      width: 200px;
+      height: 200px;
+      background-color: #0086B3;
+      padding: 1em;
+    }
+    article{
+      width: 100px;
+      height: 100px;
+      background-color: #990000;
+      padding: 1em;
+    }
+  </style>
+</head>
+<body>
+<h1>Vue事件修饰符</h1>
+<a href="http://www.lulongwen.com" @click.prevent="parent">阻止链接跳转</a>
+
+<div id="app">
+  <div @click.capture="parent">
+    父级
+    <section @click="child">
+      子级
+      <article @click.stop="grandson">
+        孙子级
+      </article>
+    </section>
+  </div>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  // 阻止事件冒泡 .stop
+  // .capture 事件捕获
+  const vm = new Vue({
+    el: '#app',
+    methods: {
+      parent(ev){
+        alert('parent');
+      },
+      child(ev){
+        alert('child');
+      },
+      grandson(ev){
+        alert('grandson');
+      },
+    }
+  });
+</script>
+</body>
+</html>

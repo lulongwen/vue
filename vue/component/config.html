@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue 自定义键盘事件</title>
+</head>
+<body>
+    <h1> v-on: 简写 @ </h1>
+    <div class="box">
+        
+        <input type="text" @keydown.back="show" v-model="title">
+        <p>
+            
+        </p>
+
+        <code>
+        Vue.config.keyCodes.back = 8;
+        </code>
+    </div>
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+    // Vue.config.keyCodes 指定
+    Vue.config.keyCodes.back = 8;
+
+    new Vue({
+        el: '.box', // 选择器
+        data:{
+            title: '请输入你想要的'
+        },
+        methods: {  // 事件
+            show(){
+                var input = document.querySelector('input');
+                var p = document.querySelector('p:last-child');
+                this.title = '';
+                p.innerHTML = input.value;
+            }
+        }
+    });
+</script>
+</body>
+</html>

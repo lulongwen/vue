@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue router</title>
+</head>
+<body>
+<div id="app">
+  <!-- 路由导航 -->
+  <router-link to="/dashboard/static">Static</router-link> |
+  <router-link to="/dashboard/page1/bar">Page1</router-link> |
+  <router-link to="/dashboard/page2/1/vuejs?foo=bar">page2</router-link> |
+  <router-link to="/login">login</router-link>
+
+  <!-- 路由出口 -->
+  <router-view></router-view>
+</div>
+</body>
+</html>

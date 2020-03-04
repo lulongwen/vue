@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>computed</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+<div id="app">
+
+  <input type="checkbox" v-model="checkAll"><br>
+  <input type="checkbox" 
+    v-for="item in products"
+    v-model="item.selected">
+
+  <p>{{fullname}}</p>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      products: [
+        {selected: true},
+        {selected: true}
+      ],
+      name: 'VUE',
+      lastname: 'Javascript'
+    },
+    // computed 计算属性，每个属性都是一个函数，值会缓存
+    computed:{
+      fullname(){
+        return `${this.name} ${this.lastname}`;
+      },
+      checkAll: {
+        get(){
+          // 返回什么结果，就会赋予 checkAll属性
+          return this.products.every( item=> item.selected);
+        },
+        set(val){
+          // val 是给checkAll赋值的时候传递过来的
+          return this.products.forEach( item=> item.selected = val);
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>

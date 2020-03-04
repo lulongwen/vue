@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue computed</title>
+</head>
+<body>
+	<div id="app">
+    <input type="text" v-model="product.name"><br>
+    {{product.price}} <br>
+    <input type="text" v-model="product.count"><br>
+    
+    <!--{{sum()}} 说明语法是错误的-->
+    {{sum}}
+	</div>
+
+	<script src="./vue.js"></script>
+	<script>
+		/**
+			computed 不能写异步逻辑
+			watch 用起来比computed 简单，某个数据变化了就执行一件事
+			computed 是根据值计算出来的
+			watch 是监控某个值的变化
+			method 是纯事件调用
+		*/
+
+		const vm = new Vue({
+			el:'#app',
+      data:{
+        product:{
+          name: '飞机',
+          price: 200,
+          count: 3
+        }
+      },
+      // 计算属性 根据其他属性计算而来的 虽然是属性，但是要写成函数
+      computed: {
+      	sum: {
+      		// 获取值
+      		get() {
+      			return this.product.price * this.product.count
+      		}
+      	}
+      },
+      method: {
+      	// get 和set  默认调用的是get方法
+      	// sum() {
+      	// 	return this.product.price*this.product.count
+      	// }
+      }
+		})
+	</script>
+</body>
+</html>

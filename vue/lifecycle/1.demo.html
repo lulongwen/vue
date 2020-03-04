@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue 入门案例</title>
+  <style>
+    input{
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div>
+      <input type="text" v-model="value" />
+      <span v-show="value">您的名字 {{value}}</span>
+    </div>
+
+    <div>
+      <input type="text" v-model="age" />
+      <span v-if="age">您的年龄是 {{age}}</span>
+    </div>
+  </div>
+
+  <script src="../vue.js"></script>
+  <script>
+    // data & methos 都是绑定到 实例上的，调用 vm.value = 'ok'
+    // data 的属性必须先定义好，才能使用，否则报错
+    const options = {
+      el: '#app',
+      data: {
+        value: '',
+        age: ''
+      },
+      methods: {
+
+      }
+    }
+
+    const vm = new Vue(options)
+  </script>
+</body>
+</html>

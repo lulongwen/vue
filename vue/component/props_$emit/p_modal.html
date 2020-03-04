@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>组件传值案例-modal弹窗</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta name="robots" content="index,follow">
+  <style>
+    .mask {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, .3);
+    }
+    .modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate3d(-50%, -50%, 0);
+      width: 400px;
+      height: 150px;
+      padding: 1em;
+      border-radius: 3px;
+      background-color: rgb(255, 255, 255);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <button @click="modal.show = true">点击显示弹窗</button>
+
+  <!-- modal.show = true 就显示，false 隐藏
+    @close 对应的函数时点击关闭按钮触发的函数
+  -->
+  <com-modal :show="modal.show"
+            :title="modal.title"
+            @close="()=>modal.show=false" />
+
+  
+</div>
+
+<template id="modal">
+  <div class="mask" v-show="show">
+    <section class="modal">
+      <h3 v-text="title"></h3>
+      <button @click="shutdownFN">关闭弹窗</button>
+    </section>
+  </div>
+</template>
+
+<script src="../../node_modules/vue/dist/vue.js"></script>
+<script>
+  // 组件名字不能用 HTML原生的标签名字
+  const comModal = {
+    props: {
+      show: Boolean,
+      title: String
+    },
+    template: '#modal',
+    methods: {
+      shutdownFN() {
+        this.$emit('close');
+      }
+    }
+  }
+
+  const VM = new Vue({
+    el: '#app',
+    data:{ // data在这里不需要 return
+      modal: {
+        show: false,
+        title: '这是弹窗的标题'
+      }
+    },
+    components: {
+      comModal
+    }
+  })
+</script>
+</body>
+</html>

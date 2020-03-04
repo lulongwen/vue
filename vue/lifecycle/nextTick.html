@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>this.$nextTick() 函数</title>
+</head>
+<body>
+<div id="app">
+  <child ref="child"/>
+
+  <h3>
+    <mark>
+      {{}} 取值表达式，可以是运算，取值，三元运算，
+      <br> 不能是函数，可以是 匿名自执行的函数
+    </mark>
+  </h3>
+  {{1+1}}
+
+  {{ flag ? 'ok' : 'no' }}
+
+  {{ (function(){return 100})() }}
+
+  <!-- 中间必须有空格 -->
+  {{ {name: 'ok'} }}
+</div>
+
+<!-- 子组件和父组件同时拥有 mounted 方法，会先走 子组件，然后走 父组件
+  需要等待子组件挂在完成后，再触发父组件的挂载
+-->
+<template id="child">
+  <div class="child">
+    <p v-for="item in arr"> {{ item }} </p>
+  </div>
+</template>
+
+<script src="../../assets/vue/vue.min.js"></script>
+<script>
+const vm = new Vue({
+  el: '#app',
+  data: {
+    flag: true
+  },
+  components: {
+    child: {
+      template: '#child',
+      data () {
+        return {
+          arr: [10, 20, 30, 40, 50]
+        }
+      },
+      mounted () {
+        // 此处是异步渲染
+        this.arr = [666, 777, 888, 999, 'momo']
+      }
+    }
+  },
+
+  mounted () {
+    // 此处获取的是 子组件页面初始化的值，而不是 组件挂载后的值
+    console.log('created', this.$refs.child.$el.innerHTML)
+
+    // 获取mounted的值要用 $nextTick() 操作 DOM，就要加 $nextTick()
+    this.$nextTick(() => {
+      console.log('mounted', this.$refs.child.$el.innerHTML)
+    })
+  }
+})
+
+vm.arr = [1, 2, 3]
+vm.arr = ['ok', 'ok222', 'ok333']
+// 数据变化后更新视图操作是异步执行的，只有最后一次修改有效
+
+vm.$nextTick(() => {
+  conosle.log(vm.$el.innerHTML)
+  conosle.log(vm.$options)
+})
+
+vm.$watch('info.ok', (newValue, oldValue) => {
+  console.log(newValue, oldValue)
+})
+
+vm.info.ok = 'hallo'
+vm.info.ok = 'world' // 多次更新只会触发一次渲染
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>父组件调用子组件的方法</title>
+  <style>
+  	/* 防止 DOM闪烁 */
+  	[v-cloak] {
+			display: none;
+		}
+    .loading{
+      height: 300px;
+      padding: 1em;
+      background-color: rgba(200, 200, 200, .3);
+      font-size: 3em;
+      font-weight: 800;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <loading ref="loading"></loading>
+  </div>
+
+  <template id="loading">
+    <div v-show="flag" class="loading">页面加载中...</div>
+  </template>
+  
+  <script src="../assets/vue/vue.min.js"></script>
+  <script>
+
+    // 父组件调用子组件的方法
+    let Loading = {
+    	data(){
+    		return {
+    			flag: true
+    		}
+    	},
+      template: '#loading',
+      methods: {
+        hide(){
+          this.flag = false;
+        }
+      }
+    };
+
+
+    let vm = new Vue({
+      el: '#app',
+      components: { // components 一定是复数
+        Loading
+      },
+      mounted(){
+        console.log('ref', this.$refs.loading, this.$refs.loading.$el)
+        // this.$refs.loading.hide(); // 调动子组件的方法
+        this.$refs.loading.$el.style.background = 'red';
+      },
+    });
+  </script>
+</body>
+</html>

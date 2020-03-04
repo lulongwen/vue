@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+	<meta charset="UTF-8">
+	<title>vue 指令</title>
+</head>
+<body>
+	<div id="app">
+	<!--
+		v-for是一个比较常用的指令，要循环谁 就把 v-for写在谁的身上
+			in 或者 of均可，遍历数组推荐 of
+			v-for="(item, index) of fruits"
+			v-for="(item, index) in fruits"
+	 -->
+    <h3>v- 指令，内部会进行缓存，使用的都是缓存里面的结果</h3>
+	<ul>
+		<li
+			v-for="(item, index) of fruits"
+			:key="`item_${index}`">{{item.name}} {{index}}
+    </li>
+	</ul>
+
+
+	<ol>
+		<li v-for="(val, key) in water" :key="key">
+			key值在前: {{key}} <br>
+			val值在后: {{val}}
+		</li>
+	</ol>
+
+
+	<!--默认渲染html 自动转化成识别后的结果-->
+	<div v-html="html"></div>
+
+
+	<!-- 字符串形式显示 -->
+	<div v-text="html"></div>
+
+    <h3>v-html 原理是 innerHTML，有 XSS攻击风险，
+      <br>
+      v-html 的内容必须是可信的，用户输入的内容必须要进行过滤
+      &lt;img src="" onerror="alert(23)">
+    </h3>
+	<input type="text" v-model="html">
+    {{html}}
+
+	</div>
+	<script src="./vue.js"></script>
+	<script>
+
+		// 默认引入vue 会提供一个Vue的构造函数
+		const vm = new Vue({
+			el: '#app',
+			data: {
+				fruits:[
+					{name:'香蕉',type:['绿色','黄色']},
+					{name:'菠萝',type:['绿色','黄色']}
+				],
+
+				water:{sweet:'甜的',color:'红的'},
+
+				html: '<h1>我是新闻</h1>'
+			}
+		})
+
+		// 改变数据
+		// vm.msg = {
+		// 	name: 'world is big',
+		// 	age: 200
+		// }
+
+		// .$set 添加新属性数据
+		// vm.$set(vm.msg,'age',100)
+	</script>
+</body>
+</html>

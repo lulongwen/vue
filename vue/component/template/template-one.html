@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue var 声明组件</title>
+
+</head>
+<body>
+<!-- 使用 组件 -->
+<div id="box">
+  <h3>父级元素：{{ text }}</h3>
+  <hr>
+  <my-aaa></my-aaa>
+</div>
+
+
+<!-- // 不用 div包起来只能写一行代码，div包起来可以写多行代码 -->
+<template id="myheader">
+  <div>
+    <h3 class="list-header">这是template 的标题</h3>
+    <strong>var 声明的组件</strong>
+  </div>
+</template>
+
+<script src="../assets/js/vue.js"></script>
+<script>
+
+  // 不用挂载到 Vue() 实例上
+  Vue.component('my-aaa', {
+    // 报错：Error compiling template，必须要有一个根元素
+    template: '<h3>我是组件</h3><strong>我是加粗标签</strong>'
+  });
+
+
+  new Vue({
+    el: '.jquery', // 选择器
+    data: {  // 数据
+      text: '这是大标题呀'
+    }
+  });
+
+</script>
+</body>
+</html>

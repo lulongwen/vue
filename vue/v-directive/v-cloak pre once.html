@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue v-pre格式化-v-cloak渲染完成后显示-v-once数据绑定一次</title>
+  <style>
+    body{
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+    [v-cloak] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>
+    v-pre格式化 <br>
+    v-cloak渲染完成后显示 <br>
+    v-once数据绑定一次
+  </h1>
+
+  <h3>
+    v-once 数据只绑定一次 <br>
+    v-pre 格式化 <br>
+    v-cloak 渲染完成后显示 <br>
+  </h3>
+
+  <!-- 不编译，跳过这个元素和子元素的编译 -->
+  <p v-pre><strong>v-pre 不编译</strong>： {{ msg }}</p>
+
+  <!-- 和CSS规则 [v-cloak] { display: none } 一起用时，渲染完成后显示 -->
+  <p v-cloak><strong>v-cloak 渲染完成后显示</strong>： {{ msg }}</p>
+
+  <!-- v-once 只渲染一次，渲染后，元素-组件及所有子节点都为静态内容 -->
+  <p v-once><strong>v-once 只绑定一次</strong>: {{ msg }}</p>
+
+  <p>
+    <input type="text" v-model="msg">
+  </p>
+
+  <p v-text="msg"></p>
+</div>
+
+<script src="../assets/vue/vue.js"></script>
+<script>
+  new Vue({
+    el: '#app', // 选择器
+
+    data: {  // 数据
+      msg: "数据绑定一次"
+    }
+  });
+</script>
+</body>
+</html>

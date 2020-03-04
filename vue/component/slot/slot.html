@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>弹窗 slot</title>
+  <style>
+  	/* 防止 DOM闪烁 */
+  	[v-cloak] {
+			display: none;
+		} 
+
+    .mask{
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 9;
+      background-color: rgba(0,0,0,.2);
+    }
+    .mask .mask-body{
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 400px;
+      height: 200px;
+      padding: 1rem;
+      border-radius: 3px;
+      transform: translate3d(-50%, -50%, 0);
+      background-color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <button @click="show">显示弹窗</button>
+
+    <!-- 组件里面的内容都是属于父级的，只有 modal组件是子级 -->
+    <modal @close="closeFn" :flag="lock" v-cloak>
+    	<a href="http://www.lulongwen.com">全栈工程师</a>
+    	<p slot="content" @click="sure">确认删除吗</p>
+    	<h1 slot="title">删除确认</h1>
+    	<!-- 没有 slot 属性的标签，默认会插入到 default里面 -->
+    	<footer>footer一直显示</footer>
+    </modal>
+  </div>
+
+  <!-- 存放组件， 模板中只能有一个根元素，通过 slot 定制模板
+		slot中可以放置一些默认内容，如果传递了内容则替换掉
+  -->
+  <template id="dialog">
+    <div class="mask" v-show="flag">
+      <div class="mask-body">
+      	<slot name="title">slot 的标题</slot>
+      	<slot name="content">slot 的内容</slot>
+      	<slot name="default">slot默认的内容</slot>
+
+        <button @click="closeModal">关闭弹窗</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="../assets/vue/vue.min.js"></script>
+  <script>
+
+    // 弹窗子组件, 声明的变量不能和 HTML标签名一样
+    let Modal = {
+    	data(){
+    		return {
+    			
+    		}
+    	},
+      props:['flag'], // 接受了父组件的参数
+      template: '#dialog',
+      methods: {
+        closeModal(){
+          console.log('$emit close')
+          this.$emit('close');
+        }
+      }
+    };
+
+    let vm = new Vue({
+      el: '#app',
+      components: { // components 一定是复数
+        Modal
+      },
+      data: {
+        lock: false
+      },
+      methods:{
+        show(){
+          this.lock = true;
+          console.log('lock', this.lock);
+        },
+        closeFn(){
+          this.lock = false;
+        },
+        sure(){
+        	alert('确定删除');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

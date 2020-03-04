@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>vue 阻止事件冒泡和默认事件</title>
+    <style>
+        input{
+            width: 300px;
+            padding: 15px 10px;
+            border: 1px solid #ddd;
+            color:#333;
+            outline:none;
+        }
+        div{
+            width: 80%;
+            height: 300px;
+            background-color: #00ccff;
+        }
+        div h3~ h3{
+            background-color: #f0ad4e;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1> v-on: 简写 @ </h1>
+    <p>
+        &lt;div class="box" @contextmenu.prevent="show">  阻止默认事件<br><br>
+        &lt;h3 class="box" @click.stop="show">  阻止事件冒泡<br><br>
+    </p>
+    <div class="box" @contextmenu.prevent="show($event)" @click="add">
+        <h3>阻止右键菜单</h3>
+
+        <br>
+        <hr>
+        <h3 @click.stop="title">阻止事件冒泡</h3>
+    </div>
+
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+    var vm = new Vue({
+        el: '.box', // 选择器
+        data:{  // 数据
+            txt: ''
+        },
+        methods: {  // 事件
+            show: function(ev){
+                // 阻止默认事件，右键菜单
+                console.log('haha,stoped!', ev.clientX );
+
+                // 阻止事件冒泡
+                ev.stoppropagation();
+            },
+            add: function(){
+                alert('大的DIV点击了')
+            },
+            title: function(){
+                alert('H3 标题点击了')
+            }
+        }
+    });
+</script>
+</body>
+</html>

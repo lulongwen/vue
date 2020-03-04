@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>$bus</title>
+</head>
+<body>
+  <div id="app">
+    <xiaohua></xiaohua>
+
+    <hr>
+    <liangliang></liangliang>
+  </div>
+
+  <script src="../assets/vue.js"></script>
+  <script>
+    const $bus = new Vue()
+
+    // 小花
+    Vue.component('xiaohua', {
+      template: `<div>
+        小花说：<input @keyup="fnSay" v-model="say" /> {{say}}
+        </div>`,
+      methods: {
+
+      },
+      data() {
+        return {
+          say: ''
+        }
+      },
+      methods: {
+        fnSay() {
+          // 触发一个事件
+          $bus.$emit('xiaohua-say', this.say)
+        }
+      }
+    })
+
+    // 凉凉
+    Vue.component('liangliang', {
+      template: `<div>我在听：{{listen}}</div>`,
+      data() {
+        return {
+          listen: '你写出来啊'
+        }
+      },
+      mounted(){
+        let self = this
+        $bus.$on('xiaohua-say', function(data) {
+          // this 指向 $bus
+          console.log(data, this)
+          self.listen = data
+        })
+      }
+    })
+    const options = {
+      el: '#app'
+    }
+    const vm = new Vue(options)
+  </script>
+</body>
+</html>

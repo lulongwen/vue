@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue 事件</title>
+</head>
+<body>
+	<div id="app">
+		<!-- Vue 事件
+			如果加括号 则不会帮你传递事件源
+			$event是vue内置的事件源 名字不能更改
+			@ 等于 v-on， 是 v-on的语法糖
+
+			事件修饰符
+				修饰方法
+				阻止冒泡
+				阻止默认事件
+				按键修饰符
+		-->
+
+		<input type="text" v-model="value" @keyup.enter="fnInput($event)">
+		<ol>
+        <li v-for="item in list" >{{item}}</li>
+    </ol>
+
+
+		<div v-show="list.length >= 5">
+      水果 已经五种了
+    </div>
+	</div>
+	
+	<script src="../vue.js"></script>
+	<script>
+
+		const vm = new Vue({
+			el: '#app',
+			data: {
+				value: '',
+				list:['香蕉','橘子','柠檬']
+			},
+
+			// 所有的方法, methods中所有的方法 this指向都是vm
+			methods: {
+				fnInput(ev) {
+					// console.log('ev', ev.target.value)
+					console.log('value', this.value)
+					this.list.push(this.value)
+
+					// 数据驱动视图，不操作dom
+					this.value = ''
+				}
+			}
+		})
+	</script>
+</body>
+</html>

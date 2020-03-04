@@ -1,0 +1,140 @@
+<html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="google-site-verification" content="cCHsgG9ktuCTgWgYfqCJql8AeR4gAne4DTZqztPoirE"><meta name="apple-itunes-app" content="app-id=987739104"><meta name="baidu-site-verification" content="qiK2a1kcFc"><meta name="360-site-verification" content="4c3c7d57d59f0e1a308462fbc7fd7e51"><meta name="sogou_site_verification" content="c49WUDZczQ"><title data-vue-meta="true">剖析 Vue.js 内部运行机制 - 染陌同学 - 掘金小册</title><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/manifest.6bf42775ff3ede98a73a.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/vendor.35e0b2c7b9da74dd2322.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/app.1d801972a0d11ad831f3.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" as="style"><link rel="apple-touch-icon" sizes="180x180" href="https://b-gold-cdn.xitu.io/favicons/v2/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-16x16.png"><link rel="manifest" href="https://b-gold-cdn.xitu.io/favicons/v2/manifest.json"><link rel="mask-icon" href="https://b-gold-cdn.xitu.io/favicons/v2/safari-pinned-tab.svg" color="#5bbad5"><link rel="shortcut icon" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon.ico"><meta name="msapplication-config" content="https://b-gold-cdn.xitu.io/favicons/v2/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="search" title="掘金" href="https://b-gold-cdn.xitu.io/conf/search.xml" type="application/opensearchdescription+xml"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/ionicons/2.0.1/css/ionicons.min.css"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/asset/fw-icon/1.0.9/iconfont.css"><link href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" rel="stylesheet"><script async="" src="https://hm.baidu.com/hm.js?93bbd335a208870aa1f296bcd6842e5e"></script><script async="" src="//www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://assets.growingio.com/vds.js"></script><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/12.fbad00127b15eab47be6.js"></script><meta data-vmid="keywords" name="keywords" content="掘金,稀土,Vue.js,微信小程序,Kotlin,RxJava,React Native,Wireshark,敏捷开发,Bootstrap,OKHttp,正则表达式,WebGL,Webpack,Docker,MVVM" data-vue-meta="true"><meta data-vmid="description" name="description" content="掘金是一个帮助开发者成长的社区，是给开发者用的 Hacker News，给设计师用的 Designer News，和给产品经理用的 Medium。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货，其中包括：Android、iOS、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时，掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 GitHub、StackOverflow、开源中国的用户，我们相信你也可以在这里有所收获。" data-vue-meta="true"><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/6.a62bf3ae38fb5b6d3c50.js"></script></head><body><div data-v-41acfafa="" data-v-decff8c4="" class="section-content"><div data-v-41acfafa="" class="section-page book-section-view"><div data-v-41acfafa="" class="entry-content article-content"><h1 class="heading" data-id="heading-0">批量异步更新策略及 nextTick 原理</h1>
+<h2 class="heading" data-id="heading-1">为什么要异步更新</h2>
+<p>通过前面几个章节我们介绍，相信大家已经明白了 Vue.js 是如何在我们修改 <code>data</code> 中的数据后修改视图了。简单回顾一下，这里面其实就是一个“<code>setter -&gt; Dep -&gt; Watcher -&gt; patch -&gt; 视图</code>”的过程。</p>
+<p>假设我们有如下这么一种情况。</p>
+<pre><code class="hljs html" lang="html"><span class="hljs-tag">&lt;<span class="hljs-name">template</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>{{number}}<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">div</span> @<span class="hljs-attr">click</span>=<span class="hljs-string">"handleClick"</span>&gt;</span>click<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">template</span>&gt;</span>
+</code></pre><pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> {
+    data () {
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-attr">number</span>: <span class="hljs-number">0</span>
+        };
+    },
+    <span class="hljs-attr">methods</span>: {
+        handleClick () {
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">1000</span>; i++) {
+                <span class="hljs-keyword">this</span>.number++;
+            }
+        }
+    }
+}
+</code></pre><p>当我们按下 click 按钮的时候，<code>number</code> 会被循环增加1000次。</p>
+<p>那么按照之前的理解，每次 <code>number</code> 被 +1 的时候，都会触发 <code>number</code> 的 <code>setter</code> 方法，从而根据上面的流程一直跑下来最后修改真实 DOM。那么在这个过程中，DOM 会被更新 1000 次！太可怕了。</p>
+<p>Vue.js 肯定不会以如此低效的方法来处理。Vue.js在默认情况下，每次触发某个数据的 <code>setter</code> 方法后，对应的 <code>Watcher</code> 对象其实会被 <code>push</code> 进一个队列 <code>queue</code> 中，在下一个 tick 的时候将这个队列 <code>queue</code> 全部拿出来 <code>run</code>（ <code>Watcher</code> 对象的一个方法，用来触发 <code>patch</code> 操作） 一遍。</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2018/1/24/161285d6b2d9e6bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="350" data-height="404" src="https://user-gold-cdn.xitu.io/2018/1/24/161285d6b2d9e6bd?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>那么什么是下一个 tick 呢？</p>
+<h2 class="heading" data-id="heading-2">nextTick</h2>
+<p>Vue.js 实现了一个 <code>nextTick</code> 函数，传入一个 <code>cb</code> ，这个 <code>cb</code> 会被存储到一个队列中，在下一个 tick 时触发队列中的所有 <code>cb</code> 事件。</p>
+<p>因为目前浏览器平台并没有实现 <code>nextTick</code> 方法，所以 Vue.js 源码中分别用 <code>Promise</code>、<code>setTimeout</code>、<code>setImmediate</code> 等方式在 microtask（或是task）中创建一个事件，目的是在当前调用栈执行完毕以后（不一定立即）才会去执行这个事件。</p>
+<p>笔者用 <code>setTimeout</code> 来模拟这个方法，当然，真实的源码中会更加复杂，笔者在小册中只讲原理，有兴趣了解源码中 <code>nextTick</code> 的具体实现的同学可以参考<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvue%2Fblob%2Fdev%2Fsrc%2Fcore%2Futil%2Fnext-tick.js%23L90" rel="nofollow noopener noreferrer">next-tick</a>。</p>
+<p>首先定义一个 <code>callbacks</code> 数组用来存储 <code>nextTick</code>，在下一个 tick 处理这些回调函数之前，所有的 <code>cb</code> 都会被存在这个 <code>callbacks</code> 数组中。<code>pending</code> 是一个标记位，代表一个等待的状态。</p>
+<p><code>setTimeout</code> 会在 task 中创建一个事件 <code>flushCallbacks</code> ，<code>flushCallbacks</code> 则会在执行时将 <code>callbacks</code> 中的所有 <code>cb</code> 依次执行。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> callbacks = [];
+<span class="hljs-keyword">let</span> pending = <span class="hljs-literal">false</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">nextTick</span> (<span class="hljs-params">cb</span>) </span>{
+    callbacks.push(cb);
+
+    <span class="hljs-keyword">if</span> (!pending) {
+        pending = <span class="hljs-literal">true</span>;
+        setTimeout(flushCallbacks, <span class="hljs-number">0</span>);
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">flushCallbacks</span> (<span class="hljs-params"></span>) </span>{
+    pending = <span class="hljs-literal">false</span>;
+    <span class="hljs-keyword">const</span> copies = callbacks.slice(<span class="hljs-number">0</span>);
+    callbacks.length = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>; i &lt; copies.length; i++) {
+        copies[i]();
+    }
+}
+</code></pre><h2 class="heading" data-id="heading-3">再写 Watcher</h2>
+<p>第一个例子中，当我们将 <code>number</code> 增加 1000 次时，先将对应的 <code>Watcher</code> 对象给 <code>push</code> 进一个队列 <code>queue</code> 中去，等下一个 tick 的时候再去执行，这样做是对的。但是有没有发现，另一个问题出现了？</p>
+<p>因为 <code>number</code> 执行 ++ 操作以后对应的 <code>Watcher</code> 对象都是同一个，我们并不需要在下一个 tick 的时候执行 1000 个同样的 <code>Watcher</code> 对象去修改界面，而是只需要执行一个 <code>Watcher</code> 对象，使其将界面上的 0 变成 1000 即可。</p>
+<p>那么，我们就需要执行一个过滤的操作，同一个的 <code>Watcher</code> 在同一个 tick 的时候应该只被执行一次，也就是说队列 <code>queue</code> 中不应该出现重复的 <code>Watcher</code> 对象。</p>
+<p>那么我们给 <code>Watcher</code> 对象起个名字吧～用 <code>id</code> 来标记每一个 <code>Watcher</code> 对象，让他们看起来“不太一样”。</p>
+<p>实现 <code>update</code> 方法，在修改数据后由 <code>Dep</code> 来调用， 而 <code>run</code> 方法才是真正的触发 <code>patch</code> 更新视图的方法。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> uid = <span class="hljs-number">0</span>;
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Watcher</span> </span>{
+    <span class="hljs-keyword">constructor</span> () {
+        <span class="hljs-keyword">this</span>.id = ++uid;
+    }
+
+    update () {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'watch'</span> + <span class="hljs-keyword">this</span>.id + <span class="hljs-string">' update'</span>);
+        queueWatcher(<span class="hljs-keyword">this</span>);
+    }
+
+    run () {
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'watch'</span> + <span class="hljs-keyword">this</span>.id + <span class="hljs-string">'视图更新啦～'</span>);
+    }
+}
+</code></pre><h2 class="heading" data-id="heading-4">queueWatcher</h2>
+<p>不知道大家注意到了没有？笔者已经将 <code>Watcher</code> 的 <code>update</code> 中的实现改成了</p>
+<pre><code class="hljs javascript" lang="javascript">queueWatcher(<span class="hljs-keyword">this</span>);
+</code></pre><p>将 <code>Watcher</code> 对象自身传递给 <code>queueWatcher</code> 方法。</p>
+<p>我们来实现一下 <code>queueWatcher</code> 方法。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> has = {};
+<span class="hljs-keyword">let</span> queue = [];
+<span class="hljs-keyword">let</span> waiting = <span class="hljs-literal">false</span>;
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">queueWatcher</span>(<span class="hljs-params">watcher</span>) </span>{
+    <span class="hljs-keyword">const</span> id = watcher.id;
+    <span class="hljs-keyword">if</span> (has[id] == <span class="hljs-literal">null</span>) {
+        has[id] = <span class="hljs-literal">true</span>;
+        queue.push(watcher);
+
+        <span class="hljs-keyword">if</span> (!waiting) {
+            waiting = <span class="hljs-literal">true</span>;
+            nextTick(flushSchedulerQueue);
+        }
+    }
+}
+</code></pre><p>我们使用一个叫做 <code>has</code> 的 map，里面存放 id -&gt; true ( false ) 的形式，用来判断是否已经存在相同的 <code>Watcher</code> 对象 （这样比每次都去遍历 <code>queue</code> 效率上会高很多）。</p>
+<p>如果目前队列 <code>queue</code> 中还没有这个 <code>Watcher</code> 对象，则该对象会被 <code>push</code> 进队列 <code>queue</code> 中去。</p>
+<p><code>waiting</code> 是一个标记位，标记是否已经向 <code>nextTick</code> 传递了 <code>flushSchedulerQueue</code> 方法，在下一个 tick 的时候执行 <code>flushSchedulerQueue</code> 方法来 flush 队列 <code>queue</code>，执行它里面的所有 <code>Watcher</code> 对象的 <code>run</code> 方法。</p>
+<h2 class="heading" data-id="heading-5">flushSchedulerQueue</h2>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">flushSchedulerQueue</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">let</span> watcher, id;
+
+    <span class="hljs-keyword">for</span> (index = <span class="hljs-number">0</span>; index &lt; queue.length; index++) {
+        watcher = queue[index];
+        id = watcher.id;
+        has[id] = <span class="hljs-literal">null</span>;
+        watcher.run();
+    }
+
+    waiting  = <span class="hljs-literal">false</span>;
+}
+</code></pre><h2 class="heading" data-id="heading-6">举个例子</h2>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> watch1 = <span class="hljs-keyword">new</span> Watcher();
+<span class="hljs-keyword">let</span> watch2 = <span class="hljs-keyword">new</span> Watcher();
+
+watch1.update();
+watch1.update();
+watch2.update();
+</code></pre><p>我们现在 new 了两个 <code>Watcher</code> 对象，因为修改了 <code>data</code> 的数据，所以我们模拟触发了两次 <code>watch1</code> 的 <code>update</code> 以及 一次 <code>watch2</code> 的 <code>update</code>。</p>
+<p>假设没有批量异步更新策略的话，理论上应该执行 <code>Watcher</code> 对象的 <code>run</code>，那么会打印。</p>
+<pre><code class="hljs console" lang="console">watch1 update
+watch1视图更新啦～
+watch1 update
+watch1视图更新啦～
+watch2 update
+watch2视图更新啦～
+</code></pre><p>实际上则执行</p>
+<pre><code class="hljs console" lang="console">watch1 update
+watch1 update
+watch2 update
+watch1视图更新啦～
+watch2视图更新啦～
+</code></pre><p>这就是异步更新策略的效果，相同的 <code>Watcher</code> 对象会在这个过程中被剔除，在下一个 tick 的时候去更新视图，从而达到对我们第一个例子的优化。</p>
+<p>我们再回过头聊一下第一个例子， <code>number</code> 会被不停地进行 <code>++</code> 操作，不断地触发它对应的 <code>Dep</code> 中的 <code>Watcher</code> 对象的 <code>update</code> 方法。然后最终 <code>queue</code> 中因为对相同 <code>id</code> 的 <code>Watcher</code> 对象进行了筛选，从而 <code>queue</code> 中实际上只会存在一个 <code>number</code> 对应的 <code>Watcher</code> 对象。在下一个 tick 的时候（此时 <code>number</code> 已经变成了 1000），触发 <code>Watcher</code> 对象的 <code>run</code> 方法来更新视图，将视图上的 <code>number</code> 从 0 直接变成 1000。</p>
+<p>到这里，批量异步更新策略及 nextTick 原理已经讲完了，接下来让我们学习一下 Vuex 状态管理的工作原理。</p>
+<p>注：本节代码参考<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto%2FVueDemo%2Fblob%2Fmaster%2F%25E3%2580%258A%25E6%2589%25B9%25E9%2587%258F%25E5%25BC%2582%25E6%25AD%25A5%25E6%259B%25B4%25E6%2596%25B0%25E7%25AD%2596%25E7%2595%25A5%25E5%258F%258A%2520nextTick%2520%25E5%258E%259F%25E7%2590%2586%25E3%2580%258B.js" rel="nofollow noopener noreferrer">《批量异步更新策略及 nextTick 原理》</a>。</p>
+</div><section data-v-41acfafa="" class="book-comments"><div data-v-41acfafa="" class="box-title">留言</div><div data-v-41acfafa="" class="comment-box"><div data-v-efcd2e56="" data-v-41acfafa="" class="comment-form comment-form" id="comment"><div data-v-b2db8566="" data-v-1b9df826="" data-v-efcd2e56="" data-src="https://avatars1.githubusercontent.com/u/25916562?v=4" class="lazy avatar avatar loaded" title="" style="background-image: url(&quot;https://avatars1.githubusercontent.com/u/25916562?v=4&quot;);"></div><textarea data-v-efcd2e56="" placeholder="评论将在后台进行审核，审核通过后对所有人可见" class="content-input" style="overflow: hidden; overflow-wrap: break-word; height: 60px;"></textarea><div data-v-efcd2e56="" class="action-box" style="display: none;"><div data-v-54e3f196="" data-v-efcd2e56="" class="image-uploader image-uploader" style="display: none;"><input data-v-54e3f196="" type="file" class="input"><button data-v-54e3f196="" class="upload-btn"><i data-v-54e3f196="" class="icon ion-image"></i><span data-v-54e3f196="">上传图片</span></button></div><div data-v-efcd2e56="" class="submit-box"><span data-v-efcd2e56="" class="submit-text">Ctrl or ⌘ + Enter</span><button data-v-efcd2e56="" class="submit-btn">评论</button></div></div><!----></div></div><ul data-v-51163f89="" data-v-41acfafa="" st:block="commentList" class="comment-list comment-list"><!----></ul></section></div></div><!----><!----></body></html>

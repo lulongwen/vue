@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>封装vue 组件</title>
+  <link rel="stylesheet" href="../../assets/boot/bootstrap.css">
+  <style>
+    body{
+      max-width: 800px;
+      width: auto;
+      margin: 3em auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+
+    <!-- @sayTitle 写法是错误的，不能用 驼峰命名法，要用中划线，否则事件不执行
+         子组件 $emit可以驼峰，父组件接收事件一定要用 中划线命名
+       更换 bg="light success"-->
+    <card bg="danger" @say-title="parent">
+      <h2 slot="head">这是Bootstrap的头部</h2>
+      <div slot="body">
+        内容区
+        <p>封装一个Bootstrap组件</p>
+        <p>slot 的用法</p>
+        <p>ref， $.nextTick()的用法</p>
+      </div>
+      <footer>参考资料：Bootstrap文档</footer>
+    </card>
+  </div>
+
+
+  <!-- 自定义card 组件 -->
+  <template id="card">
+    <div class="card" :class="[color]">
+      <header class="card-header" ref="header">
+        <slot name="head"></slot>
+      </header>
+      <div class="card-body">
+        <slot name="body"></slot>
+      </div>
+      <footer class="card-footer">
+        <slot>footer</slot>
+        <button @click="say"></button>
+      </footer>
+    </div>
+  </template>
+
+  <script src="../../assets/vue/vue.min.js"></script>
+  <script>
+    let Card = {
+      template: '#card',
+      computed:{
+        color(){
+          // 添加 bg-
+          return this.bg==='light' ? `bg-${this.bg}` : `text-white bg-${this.bg}`;
+        }
+      },
+      methods:{
+        say(){
+          this.$emit('say-title', this.$refs.header.innerHTML);
+        }
+      },
+      props:{
+        // 第一个 bg 是父组件传递的属性， 第二个 type是 属性的类型
+        bg: {
+          type: String, // this.bg = 'card-'+ this.bg 子组件不能更改父组件传递的属性，要用计算属性
+          default: 'light'
+        }
+      }
+    };
+
+    let vm = new Vue({
+      el: '#app',
+      components: {
+        Card
+      },
+      methods:{
+        parent(val){
+          console.log(val);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

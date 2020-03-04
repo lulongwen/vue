@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue v-if v-else 流程控制</title>
+</head>
+<body>
+  <div id="app">
+    <h1>
+      v-if 判断是否加载，为 true加载，false加载 v-else<br>
+      v-show 修改 CSS display 属性 block & none
+    </h1>
+
+
+    <!-- islogin == true 显示 v-if，否则显示 v-else -->
+    <header v-if="islogin" v-text="title"></header>
+    <section v-else>欢迎，管理员</section>
+    <br>
+
+    <button @click="show()">登录</button>
+  </div>
+
+
+
+<script src="../assets/js/vue.min.js"></script>
+<script>
+  new Vue({
+    el: '#app', // 选择器，也称为挂载点
+    data: {  // 数据
+      islogin: true,
+      title: '您好：登陆后操作'
+    },
+    methods: {
+      show() {
+        this.islogin = false;
+      }
+    }
+  });
+</script>
+</body>
+</html>

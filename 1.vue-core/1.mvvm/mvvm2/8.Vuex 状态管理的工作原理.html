@@ -1,0 +1,93 @@
+<html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="google-site-verification" content="cCHsgG9ktuCTgWgYfqCJql8AeR4gAne4DTZqztPoirE"><meta name="apple-itunes-app" content="app-id=987739104"><meta name="baidu-site-verification" content="qiK2a1kcFc"><meta name="360-site-verification" content="4c3c7d57d59f0e1a308462fbc7fd7e51"><meta name="sogou_site_verification" content="c49WUDZczQ"><title data-vue-meta="true">剖析 Vue.js 内部运行机制 - 染陌同学 - 掘金小册</title><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/manifest.6bf42775ff3ede98a73a.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/vendor.35e0b2c7b9da74dd2322.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/app.1d801972a0d11ad831f3.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" as="style"><link rel="apple-touch-icon" sizes="180x180" href="https://b-gold-cdn.xitu.io/favicons/v2/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-16x16.png"><link rel="manifest" href="https://b-gold-cdn.xitu.io/favicons/v2/manifest.json"><link rel="mask-icon" href="https://b-gold-cdn.xitu.io/favicons/v2/safari-pinned-tab.svg" color="#5bbad5"><link rel="shortcut icon" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon.ico"><meta name="msapplication-config" content="https://b-gold-cdn.xitu.io/favicons/v2/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="search" title="掘金" href="https://b-gold-cdn.xitu.io/conf/search.xml" type="application/opensearchdescription+xml"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/ionicons/2.0.1/css/ionicons.min.css"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/asset/fw-icon/1.0.9/iconfont.css"><link href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" rel="stylesheet"><script async="" src="https://hm.baidu.com/hm.js?93bbd335a208870aa1f296bcd6842e5e"></script><script async="" src="//www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://assets.growingio.com/vds.js"></script><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/12.fbad00127b15eab47be6.js"></script><meta data-vmid="keywords" name="keywords" content="掘金,稀土,Vue.js,微信小程序,Kotlin,RxJava,React Native,Wireshark,敏捷开发,Bootstrap,OKHttp,正则表达式,WebGL,Webpack,Docker,MVVM" data-vue-meta="true"><meta data-vmid="description" name="description" content="掘金是一个帮助开发者成长的社区，是给开发者用的 Hacker News，给设计师用的 Designer News，和给产品经理用的 Medium。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货，其中包括：Android、iOS、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时，掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 GitHub、StackOverflow、开源中国的用户，我们相信你也可以在这里有所收获。" data-vue-meta="true"><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/6.a62bf3ae38fb5b6d3c50.js"></script></head><body><div data-v-41acfafa="" data-v-decff8c4="" class="section-content"><div data-v-41acfafa="" class="section-page book-section-view"><div data-v-41acfafa="" class="entry-content article-content"><h1 class="heading" data-id="heading-0">Vuex 状态管理的工作原理</h1>
+<h2 class="heading" data-id="heading-1">为什么要使用 Vuex</h2>
+<p>当我们使用 Vue.js 来开发一个单页应用时，经常会遇到一些组件间共享的数据或状态，或是需要通过 props 深层传递的一些数据。在应用规模较小的时候，我们会使用 props、事件等常用的父子组件的组件间通信方法，或者是通过时间总线来进行任意两个组件的通信。但是当应用逐渐复杂后，问题就开始出现了，这样的通信方式会导致数据流异常地混乱。</p>
+<p></p><figure><img class="lazyload inited loaded" data-src="https://user-gold-cdn.xitu.io/2018/2/9/1617a011064cc43e?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="632" data-height="361" src="https://user-gold-cdn.xitu.io/2018/2/9/1617a011064cc43e?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>这个时候，我们就需要用到我们的状态管理工具 Vuex 了。Vuex 是一个专门为 Vue.js 框架设计的、专门用来对于 Vue.js 应用进行状态管理的库。它借鉴了 Flux、redux 的基本思想，将状态抽离到全局，形成一个 Store。因为 Vuex 内部采用了 new Vue 来将 Store 内的数据进行「响应式化」，所以 Vuex 是一款利用 Vue 内部机制的库，与 Vue 高度契合，与 Vue 搭配使用显得更加简单高效，但缺点是不能与其他的框架（如 react）配合使用。</p>
+<p>本节将简单介绍 Vuex 最核心的内部机制，起个抛砖引玉的作用，想了解更多细节可以参考笔者 <a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto" rel="nofollow noopener noreferrer">Github</a>  上的另一篇文章 <a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto%2FlearnVue%2Fblob%2Fmaster%2Fdocs%2FVuex%25E6%25BA%2590%25E7%25A0%2581%25E8%25A7%25A3%25E6%259E%2590.MarkDown" rel="nofollow noopener noreferrer">《Vuex源码解析》</a>或者直接阅读 <a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvuex" rel="nofollow noopener noreferrer">Vuex源码</a>。</p>
+<h2 class="heading" data-id="heading-2">安装</h2>
+<p>Vue.js 提供了一个 <code>Vue.use</code> 的方法来安装插件，内部会调用插件提供的 <code>install</code> 方法。</p>
+<pre><code class="hljs javascript" lang="javascript">Vue.use(Vuex);
+</code></pre><p>所以我们的插件需要提供一个 <code>install</code> 方法来安装。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> Vue;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> install (_Vue) {
+    Vue.mixin({ <span class="hljs-attr">beforeCreate</span>: vuexInit });
+    Vue = _Vue;
+}
+</code></pre><p>我们采用 <code>Vue.mixin</code> 方法将 <code>vuexInit</code> 方法混淆进 <code>beforeCreate</code> 钩子中，并用 <code>Vue</code> 保存 Vue 对象。那么 <code>vuexInit</code> 究竟实现了什么呢？</p>
+<p>我们知道，在使用 Vuex 的时候，我们需要将 <code>store</code> 传入到 Vue 实例中去。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-comment">/*将store放入Vue创建时的option中*/</span>
+<span class="hljs-keyword">new</span> Vue({
+    <span class="hljs-attr">el</span>: <span class="hljs-string">'#app'</span>,
+    store
+});
+</code></pre><p>但是我们却在每一个 vm 中都可以访问该 <code>store</code>，这个就需要靠 <code>vuexInit</code> 了。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">vuexInit</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> options = <span class="hljs-keyword">this</span>.$options;
+    <span class="hljs-keyword">if</span> (options.store) {
+        <span class="hljs-keyword">this</span>.$store = options.store;
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">this</span>.$store = options.parent.$store;
+    }
+}
+</code></pre><p>因为之前已经用<code>Vue.mixin</code> 方法将 <code>vuexInit</code> 方法混淆进 <code>beforeCreate</code> 钩子中，所以每一个 vm 实例都会调用 <code>vuexInit</code> 方法。</p>
+<p>如果是根节点（<code>$options</code>中存在 <code>store</code> 说明是根节点），则直接将 <code>options.store</code> 赋值给 <code>this.$store</code>。否则则说明不是根节点，从父节点的 <code>$store</code> 中获取。</p>
+<p>通过这步的操作，我们已经可以在任意一个 vm 中通过 <code>this.$store</code> 来访问 <code>Store</code> 的实例啦～</p>
+<h2 class="heading" data-id="heading-3">Store</h2>
+<h3 class="heading" data-id="heading-4">数据的响应式化</h3>
+<p>首先我们需要在 <code>Store</code> 的构造函数中对 <code>state</code> 进行「响应式化」。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">constructor</span> () {
+    <span class="hljs-keyword">this</span>._vm = <span class="hljs-keyword">new</span> Vue({
+        <span class="hljs-attr">data</span>: {
+            <span class="hljs-attr">$$state</span>: <span class="hljs-keyword">this</span>.state
+        }
+    })
+}
+</code></pre><p>熟悉「响应式」的同学肯定知道，这个步骤以后，<code>state</code> 会将需要的依赖收集在 <code>Dep</code> 中，在被修改时更新对应视图。我们来看一个小例子。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> globalData = {
+    <span class="hljs-attr">d</span>: <span class="hljs-string">'hello world'</span>
+};
+<span class="hljs-keyword">new</span> Vue({
+    data () {
+        <span class="hljs-keyword">return</span> {
+            <span class="hljs-attr">$$state</span>: {
+                globalData
+            }
+        }
+    }
+});
+
+<span class="hljs-comment">/* modify */</span>
+setTimeout(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> {
+    globalData.d = <span class="hljs-string">'hi~'</span>;
+}, <span class="hljs-number">1000</span>);
+
+Vue.prototype.globalData = globalData;
+</code></pre><p>任意模板中</p>
+<pre><code class="hljs html" lang="html"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>{{globalData.d}}<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><p>上述代码在全局有一个 <code>globalData</code>，它被传入一个 <code>Vue</code> 对象的 <code>data</code> 中，之后在任意 Vue 模板中对该变量进行展示，因为此时 <code>globalData</code> 已经在 Vue 的 <code>prototype</code> 上了所以直接通过 <code>this.prototype</code> 访问，也就是在模板中的 <code>{{prototype.d}}</code>。此时，<code>setTimeout</code> 在 1s 之后将 <code>globalData.d</code> 进行修改，我们发现模板中的 <code>globalData.d</code> 发生了变化。其实上述部分就是 Vuex 依赖 Vue 核心实现数据的“响应式化”。</p>
+<p>讲完了 Vuex 最核心的通过 Vue 进行数据的「响应式化」，接下来我们再来介绍两个 <code>Store</code> 的 API。</p>
+<h3 class="heading" data-id="heading-5">commit</h3>
+<p>首先是 <code>commit</code> 方法，我们知道 <code>commit</code> 方法是用来触发 <code>mutation</code> 的。</p>
+<pre><code class="hljs javascript" lang="javascript">commit (type, payload, _options) {
+    <span class="hljs-keyword">const</span> entry = <span class="hljs-keyword">this</span>._mutations[type];
+    entry.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">commitIterator</span> (<span class="hljs-params">handler</span>) </span>{
+        handler(payload);
+    });
+}
+</code></pre><p>从 <code>_mutations</code> 中取出对应的 mutation，循环执行其中的每一个 mutation。</p>
+<h3 class="heading" data-id="heading-6">dispatch</h3>
+<p><code>dispatch</code> 同样道理，用于触发 action，可以包含异步状态。</p>
+<pre><code class="hljs javascript" lang="javascript">dispatch (type, payload) {
+    <span class="hljs-keyword">const</span> entry = <span class="hljs-keyword">this</span>._actions[type];
+
+    <span class="hljs-keyword">return</span> entry.length &gt; <span class="hljs-number">1</span>
+    ? <span class="hljs-built_in">Promise</span>.all(entry.map(<span class="hljs-function"><span class="hljs-params">handler</span> =&gt;</span> handler(payload)))
+    : entry[<span class="hljs-number">0</span>](payload);
+}
+</code></pre><p>同样的，取出 <code>_actions</code> 中的所有对应 action，将其执行，如果有多个则用 <code>Promise.all</code> 进行包装。</p>
+<h2 class="heading" data-id="heading-7">最后</h2>
+<p>理解 Vuex 的核心在于理解其如何与 Vue 本身结合，如何利用 Vue 的响应式机制来实现核心 Store 的「响应式化」。</p>
+<p>Vuex 本身代码不多且设计优雅，非常值得一读，想阅读源码的同学请看<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvuex" rel="nofollow noopener noreferrer">Vuex源码</a>。</p>
+<p>注：本节代码参考<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto%2FVueDemo%2Fblob%2Fmaster%2F%25E3%2580%258AVuex%25E7%258A%25B6%25E6%2580%2581%25E7%25AE%25A1%25E7%2590%2586%25E7%259A%2584%25E5%25B7%25A5%25E4%25BD%259C%25E5%258E%259F%25E7%2590%2586%25E3%2580%258B.js" rel="nofollow noopener noreferrer">《Vuex状态管理的工作原理》</a>。</p>
+</div><section data-v-41acfafa="" class="book-comments"><div data-v-41acfafa="" class="box-title">留言</div><div data-v-41acfafa="" class="comment-box"><div data-v-efcd2e56="" data-v-41acfafa="" class="comment-form comment-form" id="comment"><div data-v-b2db8566="" data-v-1b9df826="" data-v-efcd2e56="" data-src="https://avatars1.githubusercontent.com/u/25916562?v=4" class="lazy avatar avatar loaded" title="" style="background-image: url(&quot;https://avatars1.githubusercontent.com/u/25916562?v=4&quot;);"></div><textarea data-v-efcd2e56="" placeholder="评论将在后台进行审核，审核通过后对所有人可见" class="content-input" style="overflow: hidden; overflow-wrap: break-word; height: 60px;"></textarea><div data-v-efcd2e56="" class="action-box" style="display: none;"><div data-v-54e3f196="" data-v-efcd2e56="" class="image-uploader image-uploader" style="display: none;"><input data-v-54e3f196="" type="file" class="input"><button data-v-54e3f196="" class="upload-btn"><i data-v-54e3f196="" class="icon ion-image"></i><span data-v-54e3f196="">上传图片</span></button></div><div data-v-efcd2e56="" class="submit-box"><span data-v-efcd2e56="" class="submit-text">Ctrl or ⌘ + Enter</span><button data-v-efcd2e56="" class="submit-btn">评论</button></div></div><!----></div></div><ul data-v-51163f89="" data-v-41acfafa="" st:block="commentList" class="comment-list comment-list"><!----></ul></section></div></div><!----><!----></body></html>

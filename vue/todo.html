@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>to do list</title>
+  <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css">
+  <style>
+    .del {
+      text-decoration: line-through;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <!-- todo 思路
+    1. 将数据循环到页面上
+    2. 按下 回车键添加新数据，需要加入 selected属性
+    3. 删除功能
+    4. 计算当前没有被选中的个数
+   -->
+  <div id="app">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2">
+          <div class="panel panel-warning">
+            <header class="text-danger">
+              <input type="text" class="form-control"
+                v-model="title"
+                @keyup.13="addFN">
+                您有 {{ count }} 件事情要完成
+            </header>
+
+            <div class="panel-body">
+              <ul class="list-group">
+                <li class="list-group-item"
+                  v-for="(todo, index) in filterTodos"
+                  @dblclick="rememberFN(todo)">
+                    <span :class="{del:todo.selected}"
+                      v-show="cur!=todo">
+                      <input type="checkbox" v-model="todo.selected">
+                      {{todo.title}}
+                    </span>
+
+                    <input type="text"
+                      v-model="todo.title"
+                      v-show="cur===todo"
+                      v-focus="cur===todo"
+                      @keyup.enter="cancelFN"
+                      @blur="cancelFN">
+
+                    
+                    <button type="button"
+                      class="btn btn-danger btn-xs pull-right"
+                      @click="removeFN(todo)">&bigotimes;</button>
+                    
+                </li>
+              </ul>
+            </div>
+
+            <div class="panel-footer">
+              <ul class="nav nav-pills">
+                <li :class="{active: hash==='all'}">
+                  <a href="#/all">全部任务</a>
+                </li>
+                <li :class="{active: hash==='finish'}">
+                  <a href="#/finish">已完成</a>
+                </li>
+                <li :class="{active: hash==='unfinish'}">
+                  <a href="#/unfinish">未完成</a>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../node_modules/vue/dist/vue.js"></script>
+  <script src="../node_modules/axios/dist/axios.js"></script>
+  <script>
+    const vm = new Vue({
+      el: '#app',
+      created(){
+        // ajax 获取数据初始化
+        // 1. 如果 localstorage中有数据就用，没有用默认的
+        this.todos = JSON.parse( localStorage.getItem('data') ) || this.todos;
+
+        // 2 hash默认值及监控 hash的变化，重新刷新页面也要获取hash
+        this.hash = window.location.hash.slice(2) || 'all';
+        window.addEventListener('hashChange', ()=> {
+          this.hash = window.location.hash.slice(2);
+        }, false)
+
+      },
+      computed: {
+        filterTodos(){
+          if(this.hash === 'all')
+            return this.todos;
+          if(this.hash === 'finish')
+            return this.todos.filter( item=> item.selected);
+          if(this.hash ==='unfinish')
+            return this.todos.filter( item=> !item.selected);
+          
+          window.location.hash = '/all';
+        },
+        count(){
+          return this.todos.filter( item=> !item.selected).length;
+        }
+      },
+      data: {
+        todos: [
+          {
+            selected: false,
+            title: '睡觉'
+          },
+          {
+            selected: false,
+            title: '吃饭'
+          }
+        ],
+        title: '',
+        cur: '',
+        hash: ''
+      },
+      directives: {
+        focus(el, bindings) {
+          if(bindings.value) {
+            el.focus(); // 当点击当前的li时，让内部的输入框获取焦点
+          }
+        }
+      },
+      watch: {
+        todos: {
+          handle() { // 默认写成函数，相当于默认写了个 handle
+            localStorage.setItem('data', JSON.stringify(this.todos) );
+          },
+          deep: true // watch默认只监控一层数据的变化，深度监控 true
+        }
+      },
+      methods: {
+        addFN() {
+          // keydown | keyup 区别：keydown的时候内容没有 进入到输入框内
+          this.todos.push({
+            selected: false,
+            title: this.title
+          });
+          this.title = '';
+        },
+        removeFN(todo) {
+          // 拿到当前点击的数据和数组里的对比，相等返回false
+          this.todos = this.todos.filter( item=> item !== todo);
+        },
+        rememberFN(todo) { // todo 当前点击的这一项
+          this.cur = todo;
+        },
+        cancelFN() {
+          this.cur = '';
+        }
+      },
+    })
+  </script>
+</body>
+</html>

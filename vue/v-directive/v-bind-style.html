@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue :style 对象形式绑定 :style</title>
+  <style>
+    #app{
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>:style 对象形式绑定 :style</h1>
+
+
+  <!-- 行内式绑定样式 -->
+  <h3 :style="{height:'100px', backgroundColor: '#f00',padding: '15px'}">VUE 行内式绑定样式</h3>
+
+
+  <h3 :style="{color: red, fontSize: font}">VUE 添加类</h3>
+
+  <!-- 行内式绑定对象的样式 -->
+  <h3 :style="linkCss">VUE 添加类</h3>
+
+  <!-- array :style -->
+  <h3 :style="[c, b]">VUE 添加类</h3>
+  <h3 :style="[b]">VUE 添加类</h3>
+</div>
+
+
+<script src="../assets/js/vue.min.js"></script>
+<script>
+  new Vue({
+    el: '#app', // 选择器
+
+    data: {  // 数据
+      linkCss: {
+        height: '100px',
+        backgroundColor: '#f00', // 复合样式要用驼峰命名法
+        color: '#fff'
+      },
+      red: 'red',
+      font: '30px',
+      c: {color: '#fff'},
+      b: {height: '100px', backgroundColor: '#00ff97'}
+    },
+    computed:{
+      myStyle(){
+        // 修改 style属性
+        return this.linkCss = {
+          fontSize: '20px',
+          border: '2px solid #00ff97'
+        }
+      }
+
+    }
+  });
+</script>
+</body>
+</html>

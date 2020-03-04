@@ -1,0 +1,592 @@
+<html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="google-site-verification" content="cCHsgG9ktuCTgWgYfqCJql8AeR4gAne4DTZqztPoirE"><meta name="apple-itunes-app" content="app-id=987739104"><meta name="baidu-site-verification" content="qiK2a1kcFc"><meta name="360-site-verification" content="4c3c7d57d59f0e1a308462fbc7fd7e51"><meta name="sogou_site_verification" content="c49WUDZczQ"><title data-vue-meta="true">剖析 Vue.js 内部运行机制 - 染陌同学 - 掘金小册</title><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/manifest.6bf42775ff3ede98a73a.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/vendor.35e0b2c7b9da74dd2322.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/js/app.1d801972a0d11ad831f3.js" as="script"><link rel="preload" href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" as="style"><link rel="apple-touch-icon" sizes="180x180" href="https://b-gold-cdn.xitu.io/favicons/v2/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-16x16.png"><link rel="manifest" href="https://b-gold-cdn.xitu.io/favicons/v2/manifest.json"><link rel="mask-icon" href="https://b-gold-cdn.xitu.io/favicons/v2/safari-pinned-tab.svg" color="#5bbad5"><link rel="shortcut icon" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon.ico"><meta name="msapplication-config" content="https://b-gold-cdn.xitu.io/favicons/v2/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="search" title="掘金" href="https://b-gold-cdn.xitu.io/conf/search.xml" type="application/opensearchdescription+xml"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/ionicons/2.0.1/css/ionicons.min.css"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/asset/fw-icon/1.0.9/iconfont.css"><link href="https://b-gold-cdn.xitu.io/v3/static/css/app.1b316b577700ef69a2d27840e1b6e001.css" rel="stylesheet"><script async="" src="https://hm.baidu.com/hm.js?93bbd335a208870aa1f296bcd6842e5e"></script><script async="" src="//www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://assets.growingio.com/vds.js"></script><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/12.fbad00127b15eab47be6.js"></script><meta data-vmid="keywords" name="keywords" content="掘金,稀土,Vue.js,微信小程序,Kotlin,RxJava,React Native,Wireshark,敏捷开发,Bootstrap,OKHttp,正则表达式,WebGL,Webpack,Docker,MVVM" data-vue-meta="true"><meta data-vmid="description" name="description" content="掘金是一个帮助开发者成长的社区，是给开发者用的 Hacker News，给设计师用的 Designer News，和给产品经理用的 Medium。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货，其中包括：Android、iOS、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时，掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 GitHub、StackOverflow、开源中国的用户，我们相信你也可以在这里有所收获。" data-vue-meta="true"><script type="text/javascript" charset="utf-8" async="" src="https://b-gold-cdn.xitu.io/v3/static/js/6.a62bf3ae38fb5b6d3c50.js"></script></head><body><div data-v-41acfafa="" data-v-decff8c4="" class="section-content"><div data-v-41acfafa="" class="section-page book-section-view"><div data-v-41acfafa="" class="entry-content article-content"><h1 class="heading" data-id="heading-0">template 模板是怎样通过 Compile 编译的</h1>
+<h2 class="heading" data-id="heading-1">Compile</h2>
+<p><code>compile</code> 编译可以分成 <code>parse</code>、<code>optimize</code> 与 <code>generate</code> 三个阶段，最终需要得到 render function。这部分内容不算 Vue.js 的响应式核心，只是用来编译的，笔者认为在精力有限的情况下不需要追究其全部的实现细节，能够把握如何解析的大致流程即可。</p>
+<p></p><figure><img class="lazyload inited loaded" data-src="https://user-gold-cdn.xitu.io/2017/12/19/1606ec3d306ab28f?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="824" data-height="496" src="https://user-gold-cdn.xitu.io/2017/12/19/1606ec3d306ab28f?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>由于解析过程比较复杂，直接上代码可能会导致不了解这部分内容的同学一头雾水。所以笔者准备提供一个 template 的示例，通过这个示例的变化来看解析的过程。但是解析的过程及结果都是将最重要的部分抽离出来展示，希望能让读者更好地了解其核心部分的实现。</p>
+<pre><code class="hljs html" lang="html"><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">:class</span>=<span class="hljs-string">"c"</span> <span class="hljs-attr">class</span>=<span class="hljs-string">"demo"</span> <span class="hljs-attr">v-if</span>=<span class="hljs-string">"isShow"</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">span</span> <span class="hljs-attr">v-for</span>=<span class="hljs-string">"item in sz"</span>&gt;</span>{{item}}<span class="hljs-tag">&lt;/<span class="hljs-name">span</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">var</span> html = <span class="hljs-string">'&lt;div :class="c" class="demo" v-if="isShow"&gt;&lt;span v-for="item in sz"&gt;{{item}}&lt;/span&gt;&lt;/div&gt;'</span>;
+</code></pre><p>接下来的过程都会依赖这个示例来进行。</p>
+<h2 class="heading" data-id="heading-2">parse</h2>
+<p>首先是 <code>parse</code>，<code>parse</code> 会用正则等方式将 template 模板中进行字符串解析，得到指令、class、style等数据，形成 AST（<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fzh.wikipedia.org%2Fwiki%2F%25E6%258A%25BD%25E8%25B1%25A1%25E8%25AA%259E%25E6%25B3%2595%25E6%25A8%25B9" rel="nofollow noopener noreferrer">在计算机科学中，抽象语法树（abstract syntax tree或者缩写为AST），或者语法树（syntax tree），是源代码的抽象语法结构的树状表现形式，这里特指编程语言的源代码。</a>）。</p>
+<p>这个过程比较复杂，会涉及到比较多的正则进行字符串解析，我们来看一下得到的 AST 的样子。</p>
+<pre><code class="hljs javascript" lang="javascript">{
+    <span class="hljs-comment">/* 标签属性的map，记录了标签上属性 */</span>
+    <span class="hljs-string">'attrsMap'</span>: {
+        <span class="hljs-string">':class'</span>: <span class="hljs-string">'c'</span>,
+        <span class="hljs-string">'class'</span>: <span class="hljs-string">'demo'</span>,
+        <span class="hljs-string">'v-if'</span>: <span class="hljs-string">'isShow'</span>
+    },
+    <span class="hljs-comment">/* 解析得到的:class */</span>
+    <span class="hljs-string">'classBinding'</span>: <span class="hljs-string">'c'</span>,
+    <span class="hljs-comment">/* 标签属性v-if */</span>
+    <span class="hljs-string">'if'</span>: <span class="hljs-string">'isShow'</span>,
+    <span class="hljs-comment">/* v-if的条件 */</span>
+    <span class="hljs-string">'ifConditions'</span>: [
+        {
+            <span class="hljs-string">'exp'</span>: <span class="hljs-string">'isShow'</span>
+        }
+    ],
+    <span class="hljs-comment">/* 标签属性class */</span>
+    <span class="hljs-string">'staticClass'</span>: <span class="hljs-string">'demo'</span>,
+    <span class="hljs-comment">/* 标签的tag */</span>
+    <span class="hljs-string">'tag'</span>: <span class="hljs-string">'div'</span>,
+    <span class="hljs-comment">/* 子标签数组 */</span>
+    <span class="hljs-string">'children'</span>: [
+        {
+            <span class="hljs-string">'attrsMap'</span>: {
+                <span class="hljs-string">'v-for'</span>: <span class="hljs-string">"item in sz"</span>
+            },
+            <span class="hljs-comment">/* for循环的参数 */</span>
+            <span class="hljs-string">'alias'</span>: <span class="hljs-string">"item"</span>,
+            <span class="hljs-comment">/* for循环的对象 */</span>
+            <span class="hljs-string">'for'</span>: <span class="hljs-string">'sz'</span>,
+            <span class="hljs-comment">/* for循环是否已经被处理的标记位 */</span>
+            <span class="hljs-string">'forProcessed'</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">'tag'</span>: <span class="hljs-string">'span'</span>,
+            <span class="hljs-string">'children'</span>: [
+                {
+                    <span class="hljs-comment">/* 表达式，_s是一个转字符串的函数 */</span>
+                    <span class="hljs-string">'expression'</span>: <span class="hljs-string">'_s(item)'</span>,
+                    <span class="hljs-string">'text'</span>: <span class="hljs-string">'{{item}}'</span>
+                }
+            ]
+        }
+    ]
+}
+
+</code></pre><p>最终得到的 AST 通过一些特定的属性，能够比较清晰地描述出标签的属性以及依赖关系。</p>
+<p>接下来我们用代码来讲解一下如何使用正则来把 template 编译成我们需要的 AST 的。</p>
+<h3 class="heading" data-id="heading-3">正则</h3>
+<p>首先我们定义一下接下来我们会用到的正则。</p>
+<pre><code class="hljs javascript" lang="javascript">const ncname = '[a-zA-Z_][\\w\\-\\.]*';
+const singleAttrIdentifier = /([^\s"'&lt;&gt;/=]+)/
+const singleAttrAssign = /(?:=)/
+const singleAttrValues = [
+  /"([^"]*)"+/.source,
+  /'([^']*)'+/.source,
+  /([^\s"'=&lt;&gt;`]+)/.source
+]
+const attribute = new RegExp(
+  '^\\s*' + singleAttrIdentifier.source +
+  '(?:\\s*(' + singleAttrAssign.source + ')' +
+  '\\s*(?:' + singleAttrValues.join('|') + '))?'
+)
+
+const qnameCapture = '((?:' + ncname + '\\:)?' + ncname + ')'
+const startTagOpen = new RegExp('^&lt;' + qnameCapture)
+const startTagClose = /^\s*(\/?)&gt;/
+
+const endTag = new RegExp('^&lt;\\/' + qnameCapture + '[^&gt;]*&gt;')
+
+const defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g
+
+const forAliasRE = /(.*?)\s+(?:in|of)\s+(.*)/
+</code></pre><h2 class="heading" data-id="heading-4">advance</h2>
+<p>因为我们解析 template 采用循环进行字符串匹配的方式，所以每匹配解析完一段我们需要将已经匹配掉的去掉，头部的指针指向接下来需要匹配的部分。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">advance</span> (<span class="hljs-params">n</span>) </span>{
+    index += n
+    html = html.substring(n)
+}
+</code></pre><p>举个例子，当我们把第一个 div 的头标签全部匹配完毕以后，我们需要将这部分除去，也就是向右移动 43 个字符。</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2018/1/7/160d00562f38ab39?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="1086" data-height="199" src="https://user-gold-cdn.xitu.io/2018/1/7/160d00562f38ab39?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>调用 <code>advance</code> 函数</p>
+<pre><code class="hljs javascript" lang="javascript">advance(<span class="hljs-number">43</span>);
+</code></pre><p>得到结果</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2018/1/7/160d0058331006a5?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="1096" data-height="198" src="https://user-gold-cdn.xitu.io/2018/1/7/160d0058331006a5?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<h3 class="heading" data-id="heading-5">parseHTML</h3>
+<p>首先我们需要定义个 <code>parseHTML</code> 函数，在里面我们循环解析 template 字符串。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseHTML</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">while</span>(html) {
+        <span class="hljs-keyword">let</span> textEnd = html.indexOf(<span class="hljs-string">'&lt;'</span>);
+        <span class="hljs-keyword">if</span> (textEnd === <span class="hljs-number">0</span>) {
+            <span class="hljs-keyword">if</span> (html.match(endTag)) {
+                <span class="hljs-comment">//...process end tag</span>
+                <span class="hljs-keyword">continue</span>;
+            }
+            <span class="hljs-keyword">if</span> (html.match(startTagOpen)) {
+                <span class="hljs-comment">//...process start tag</span>
+                <span class="hljs-keyword">continue</span>;
+            }
+        } <span class="hljs-keyword">else</span> {
+            <span class="hljs-comment">//...process text</span>
+            <span class="hljs-keyword">continue</span>;
+        }
+    }
+}
+</code></pre><p><code>parseHTML</code> 会用 <code>while</code> 来循环解析 template ，用正则在匹配到标签头、标签尾以及文本的时候分别进行不同的处理。直到整个 template 被解析完毕。</p>
+<h3 class="heading" data-id="heading-6">parseStartTag</h3>
+<p>我们来写一个 <code>parseStartTag</code> 函数，用来解析起始标签（"&lt;div :class="c" class="demo" v-if="isShow"&gt;"部分的内容）。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseStartTag</span> (<span class="hljs-params"></span>) </span>{
+    <span class="hljs-keyword">const</span> start = html.match(startTagOpen);
+    <span class="hljs-keyword">if</span> (start) {
+        <span class="hljs-keyword">const</span> match = {
+            <span class="hljs-attr">tagName</span>: start[<span class="hljs-number">1</span>],
+            <span class="hljs-attr">attrs</span>: [],
+            <span class="hljs-attr">start</span>: index
+        }
+        advance(start[<span class="hljs-number">0</span>].length);
+
+        <span class="hljs-keyword">let</span> end, attr
+        <span class="hljs-keyword">while</span> (!(end = html.match(startTagClose)) &amp;&amp; (attr = html.match(attribute))) {
+            advance(attr[<span class="hljs-number">0</span>].length)
+            match.attrs.push({
+                <span class="hljs-attr">name</span>: attr[<span class="hljs-number">1</span>],
+                <span class="hljs-attr">value</span>: attr[<span class="hljs-number">3</span>]
+            });
+        }
+        <span class="hljs-keyword">if</span> (end) {
+            match.unarySlash = end[<span class="hljs-number">1</span>];
+            advance(end[<span class="hljs-number">0</span>].length);
+            match.end = index;
+            <span class="hljs-keyword">return</span> match
+        }
+    }
+}
+</code></pre><p>首先用 <code>startTagOpen</code> 正则得到标签的头部，可以得到 <code>tagName</code>（标签名称），同时我们需要一个数组 <code>attrs</code> 用来存放标签内的属性。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">const</span> start = html.match(startTagOpen);
+<span class="hljs-keyword">const</span> match = {
+    <span class="hljs-attr">tagName</span>: start[<span class="hljs-number">1</span>],
+    <span class="hljs-attr">attrs</span>: [],
+    <span class="hljs-attr">start</span>: index
+}
+advance(start[<span class="hljs-number">0</span>].length);
+</code></pre><p>接下来使用 <code>startTagClose</code> 与 <code>attribute</code> 两个正则分别用来解析标签结束以及标签内的属性。这段代码用 <code>while</code> 循环一直到匹配到 <code>startTagClose</code> 为止，解析内部所有的属性。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">let</span> end, attr
+<span class="hljs-keyword">while</span> (!(end = html.match(startTagClose)) &amp;&amp; (attr = html.match(attribute))) {
+    advance(attr[<span class="hljs-number">0</span>].length)
+    match.attrs.push({
+        <span class="hljs-attr">name</span>: attr[<span class="hljs-number">1</span>],
+        <span class="hljs-attr">value</span>: attr[<span class="hljs-number">3</span>]
+    });
+}
+<span class="hljs-keyword">if</span> (end) {
+    match.unarySlash = end[<span class="hljs-number">1</span>];
+    advance(end[<span class="hljs-number">0</span>].length);
+    match.end = index;
+    <span class="hljs-keyword">return</span> match
+}
+</code></pre><h2 class="heading" data-id="heading-7">stack</h2>
+<p>此外，我们需要维护一个 <strong>stack</strong> 栈来保存已经解析好的标签头，这样我们可以根据在解析尾部标签的时候得到所属的层级关系以及父标签。同时我们定义一个 <code>currentParent</code> 变量用来存放当前标签的父标签节点的引用， <code>root</code> 变量用来指向根标签节点。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">const</span> stack = [];
+<span class="hljs-keyword">let</span> currentParent, root;
+</code></pre><p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2018/1/7/160d0f34a5642ce8?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="800" data-height="600" src="https://user-gold-cdn.xitu.io/2018/1/7/160d0f34a5642ce8?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+<p>知道这个以后，我们优化一下 <code>parseHTML</code> ，在 <code>startTagOpen</code> 的 <code>if</code> 逻辑中加上新的处理。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">if</span> (html.match(startTagOpen)) {
+    <span class="hljs-keyword">const</span> startTagMatch = parseStartTag();
+    <span class="hljs-keyword">const</span> element = {
+        <span class="hljs-attr">type</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">tag</span>: startTagMatch.tagName,
+        <span class="hljs-attr">lowerCasedTag</span>: startTagMatch.tagName.toLowerCase(),
+        <span class="hljs-attr">attrsList</span>: startTagMatch.attrs,
+        <span class="hljs-attr">attrsMap</span>: makeAttrsMap(startTagMatch.attrs),
+        <span class="hljs-attr">parent</span>: currentParent,
+        <span class="hljs-attr">children</span>: []
+    }
+
+    <span class="hljs-keyword">if</span>(!root){
+        root = element
+    }
+
+    <span class="hljs-keyword">if</span>(currentParent){
+        currentParent.children.push(element);
+    }
+
+    stack.push(element);
+    currentParent = element;
+    <span class="hljs-keyword">continue</span>;
+}
+</code></pre><p>我们将 <code>startTagMatch</code> 得到的结果首先封装成 <code>element</code> ，这个就是最终形成的 AST 的节点，标签节点的 type 为 1。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">const</span> startTagMatch = parseStartTag();
+<span class="hljs-keyword">const</span> element = {
+    <span class="hljs-attr">type</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">tag</span>: startTagMatch.tagName,
+    <span class="hljs-attr">attrsList</span>: startTagMatch.attrs,
+    <span class="hljs-attr">attrsMap</span>: makeAttrsMap(startTagMatch.attrs),
+    <span class="hljs-attr">parent</span>: currentParent,
+    <span class="hljs-attr">children</span>: []
+}
+</code></pre><p>然后让 <code>root</code> 指向根节点的引用。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">if</span>(!root){
+    root = element
+}
+</code></pre><p>接着我们将当前节点的 <code>element</code> 放入父节点 <code>currentParent</code> 的 <code>children</code> 数组中。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">if</span>(currentParent){
+    currentParent.children.push(element);
+}
+</code></pre><p>最后将当前节点 <code>element</code> 压入 stack 栈中，并将 <code>currentParent</code> 指向当前节点，因为接下去下一个解析如果还是头标签或者是文本的话，会成为当前节点的子节点，如果是尾标签的话，那么将会从栈中取出当前节点，这种情况我们接下来要讲。</p>
+<pre><code class="hljs javascript" lang="javascript">stack.push(element);
+currentParent = element;
+<span class="hljs-keyword">continue</span>;
+</code></pre><p>其中的 <code>makeAttrsMap</code> 是将 attrs 转换成 map 格式的一个方法。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">makeAttrsMap</span> (<span class="hljs-params">attrs</span>) </span>{
+    <span class="hljs-keyword">const</span> map = {}
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>, l = attrs.length; i &lt; l; i++) {
+        map[attrs[i].name] = attrs[i].value;
+    }
+    <span class="hljs-keyword">return</span> map
+}
+</code></pre><h3 class="heading" data-id="heading-8">parseEndTag</h3>
+<p>同样，我们在 <code>parseHTML</code> 中加入对尾标签的解析函数，为了匹配如“&lt;/div&gt;”。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">const</span> endTagMatch = html.match(endTag)
+ <span class="hljs-keyword">if</span> (endTagMatch) {
+    advance(endTagMatch[<span class="hljs-number">0</span>].length);
+    parseEndTag(endTagMatch[<span class="hljs-number">1</span>]);
+    <span class="hljs-keyword">continue</span>;
+}
+</code></pre><p>用 <code>parseEndTag</code> 来解析尾标签，它会从 stack 栈中取出最近的跟自己标签名一致的那个元素，将 <code>currentParent</code> 指向那个元素，并将该元素之前的元素都从 stack 中出栈。</p>
+<p>这里可能有同学会问，难道解析的尾元素不应该对应 stack 栈的最上面的一个元素才对吗？</p>
+<p>其实不然，比如说可能会存在自闭合的标签，如“&lt;br /&gt;”，或者是写了“&lt;span&gt;”但是没有加上“&lt; /span&gt;”的情况，这时候就要找到 stack 中的第二个位置才能找到同名标签。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseEndTag</span> (<span class="hljs-params">tagName</span>) </span>{
+    <span class="hljs-keyword">let</span> pos;
+    <span class="hljs-keyword">for</span> (pos = stack.length - <span class="hljs-number">1</span>; pos &gt;= <span class="hljs-number">0</span>; pos--) {
+        <span class="hljs-keyword">if</span> (stack[pos].lowerCasedTag === tagName.toLowerCase()) {
+            <span class="hljs-keyword">break</span>;
+        }
+    }
+
+    <span class="hljs-keyword">if</span> (pos &gt;= <span class="hljs-number">0</span>) {
+        stack.length = pos;
+        currentParent = stack[pos]; 
+    }   
+}
+</code></pre><h3 class="heading" data-id="heading-9">parseText</h3>
+<p>最后是解析文本，这个比较简单，只需要将文本取出，然后有两种情况，一种是普通的文本，直接构建一个节点 push 进当前 <code>currentParent</code> 的 children 中即可。还有一种情况是文本是如“{{item}}”这样的 Vue.js 的表达式，这时候我们需要用 <code>parseText</code> 来将表达式转化成代码。</p>
+<pre><code class="hljs javascript" lang="javascript">text = html.substring(<span class="hljs-number">0</span>, textEnd)
+advance(textEnd)
+<span class="hljs-keyword">let</span> expression;
+<span class="hljs-keyword">if</span> (expression = parseText(text)) {
+    currentParent.children.push({
+        <span class="hljs-attr">type</span>: <span class="hljs-number">2</span>,
+        text,
+        expression
+    });
+} <span class="hljs-keyword">else</span> {
+    currentParent.children.push({
+        <span class="hljs-attr">type</span>: <span class="hljs-number">3</span>,
+        text,
+    });
+}
+<span class="hljs-keyword">continue</span>;
+</code></pre><p>我们会用到一个 <code>parseText</code> 函数。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">parseText</span> (<span class="hljs-params">text</span>) </span>{
+    <span class="hljs-keyword">if</span> (!defaultTagRE.test(text)) <span class="hljs-keyword">return</span>;
+
+    <span class="hljs-keyword">const</span> tokens = [];
+    <span class="hljs-keyword">let</span> lastIndex = defaultTagRE.lastIndex = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">let</span> match, index
+    <span class="hljs-keyword">while</span> ((match = defaultTagRE.exec(text))) {
+        index = match.index
+        
+        <span class="hljs-keyword">if</span> (index &gt; lastIndex) {
+            tokens.push(<span class="hljs-built_in">JSON</span>.stringify(text.slice(lastIndex, index)))
+        }
+        
+        <span class="hljs-keyword">const</span> exp = match[<span class="hljs-number">1</span>].trim()
+        tokens.push(<span class="hljs-string">`_s(<span class="hljs-subst">${exp}</span>)`</span>)
+        lastIndex = index + match[<span class="hljs-number">0</span>].length
+    }
+
+    <span class="hljs-keyword">if</span> (lastIndex &lt; text.length) {
+        tokens.push(<span class="hljs-built_in">JSON</span>.stringify(text.slice(lastIndex)))
+    }
+    <span class="hljs-keyword">return</span> tokens.join(<span class="hljs-string">'+'</span>);
+}
+</code></pre><p>我们使用一个 <code>tokens</code> 数组来存放解析结果，通过 <code>defaultTagRE</code> 来循环匹配该文本，如果是普通文本直接 <code>push</code> 到 <code>tokens</code> 数组中去，如果是表达式（{{item}}），则转化成“_s(${exp})”的形式。</p>
+<p>举个例子，如果我们有这样一个文本。</p>
+<pre><code class="hljs html" lang="html"><span class="hljs-tag">&lt;<span class="hljs-name">div</span>&gt;</span>hello,{{name}}.<span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+</code></pre><p>最终得到 <code>tokens</code>。</p>
+<pre><code class="hljs javascript" lang="javascript">tokens = [<span class="hljs-string">'hello,'</span>, _s(name), <span class="hljs-string">'.'</span>];
+</code></pre><p>最终通过 <code>join</code> 返回表达式。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-string">'hello'</span> + _s(name) + <span class="hljs-string">'.'</span>;
+</code></pre><h3 class="heading" data-id="heading-10">processIf与processFor</h3>
+<p>最后介绍一下如何处理“<code>v-if</code>”以及“<code>v-for</code>”这样的 Vue.js 的表达式的，这里我们只简单介绍两个示例中用到的表达式解析。</p>
+<p>我们只需要在解析头标签的内容中加入这两个表达式的解析函数即可，在这时“<code>v-for</code>”之类指令已经在属性解析时存入了 <code>attrsMap</code> 中了。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">if</span> (html.match(startTagOpen)) {
+    <span class="hljs-keyword">const</span> startTagMatch = parseStartTag();
+    <span class="hljs-keyword">const</span> element = {
+        <span class="hljs-attr">type</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-attr">tag</span>: startTagMatch.tagName,
+        <span class="hljs-attr">attrsList</span>: startTagMatch.attrs,
+        <span class="hljs-attr">attrsMap</span>: makeAttrsMap(startTagMatch.attrs),
+        <span class="hljs-attr">parent</span>: currentParent,
+        <span class="hljs-attr">children</span>: []
+    }
+
+    processIf(element);
+    processFor(element);
+
+    <span class="hljs-keyword">if</span>(!root){
+        root = element
+    }
+
+    <span class="hljs-keyword">if</span>(currentParent){
+        currentParent.children.push(element);
+    }
+
+    stack.push(element);
+    currentParent = element;
+    <span class="hljs-keyword">continue</span>;
+}
+</code></pre><p>首先我们需要定义一个 <code>getAndRemoveAttr</code> 函数，用来从 <code>el</code> 的 <code>attrsMap</code> 属性或是 <code>attrsList</code> 属性中取出 <code>name</code> 对应值。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getAndRemoveAttr</span> (<span class="hljs-params">el, name</span>) </span>{
+    <span class="hljs-keyword">let</span> val
+    <span class="hljs-keyword">if</span> ((val = el.attrsMap[name]) != <span class="hljs-literal">null</span>) {
+        <span class="hljs-keyword">const</span> list = el.attrsList
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>, l = list.length; i &lt; l; i++) {
+            <span class="hljs-keyword">if</span> (list[i].name === name) {
+                list.splice(i, <span class="hljs-number">1</span>)
+                <span class="hljs-keyword">break</span>
+            }   
+        }
+    }
+    <span class="hljs-keyword">return</span> val
+}
+</code></pre><p>比如说解析示例的 div 标签属性。</p>
+<pre><code class="hljs javascript" lang="javascript">getAndRemoveAttr(el, <span class="hljs-string">'v-for'</span>);
+</code></pre><p>可有得到“item in sz”。</p>
+<p>有了这个函数这样我们就可以开始实现 <code>processFor</code> 与 <code>processIf</code> 了。</p>
+<p>“v-for”会将指令解析成 <code>for</code> 属性以及 <code>alias</code> 属性，而“v-if”会将条件都存入 <code>ifConditions</code> 数组中。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processFor</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">let</span> exp;
+    <span class="hljs-keyword">if</span> ((exp = getAndRemoveAttr(el, <span class="hljs-string">'v-for'</span>))) {
+        <span class="hljs-keyword">const</span> inMatch = exp.match(forAliasRE);
+        el.for = inMatch[<span class="hljs-number">2</span>].trim();
+        el.alias = inMatch[<span class="hljs-number">1</span>].trim();
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">processIf</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">const</span> exp = getAndRemoveAttr(el, <span class="hljs-string">'v-if'</span>);
+    <span class="hljs-keyword">if</span> (exp) {
+        el.if = exp;
+        <span class="hljs-keyword">if</span> (!el.ifConditions) {
+            el.ifConditions = [];
+        }
+        el.ifConditions.push({
+            <span class="hljs-attr">exp</span>: exp,
+            <span class="hljs-attr">block</span>: el
+        });
+    }
+}
+</code></pre><p>到这里，我们已经把 <code>parse</code> 的过程介绍完了，接下来看一下 <code>optimize</code>。</p>
+<h2 class="heading" data-id="heading-11">optimize</h2>
+<p><code>optimize</code> 主要作用就跟它的名字一样，用作「优化」。</p>
+<p>这个涉及到后面要讲 <code>patch</code> 的过程，因为 <code>patch</code> 的过程实际上是将 VNode 节点进行一层一层的比对，然后将「差异」更新到视图上。那么一些静态节点是不会根据数据变化而产生变化的，这些节点我们没有比对的需求，是不是可以跳过这些静态节点的比对，从而节省一些性能呢？</p>
+<p>那么我们就需要为静态的节点做上一些「标记」，在 <code>patch</code> 的时候我们就可以直接跳过这些被标记的节点的比对，从而达到「优化」的目的。</p>
+<p>经过 <code>optimize</code> 这层的处理，每个节点会加上 <code>static</code> 属性，用来标记是否是静态的。</p>
+<p>得到如下结果。</p>
+<pre><code class="hljs javascript" lang="javascript">{
+    <span class="hljs-string">'attrsMap'</span>: {
+        <span class="hljs-string">':class'</span>: <span class="hljs-string">'c'</span>,
+        <span class="hljs-string">'class'</span>: <span class="hljs-string">'demo'</span>,
+        <span class="hljs-string">'v-if'</span>: <span class="hljs-string">'isShow'</span>
+    },
+    <span class="hljs-string">'classBinding'</span>: <span class="hljs-string">'c'</span>,
+    <span class="hljs-string">'if'</span>: <span class="hljs-string">'isShow'</span>,
+    <span class="hljs-string">'ifConditions'</span>: [
+        <span class="hljs-string">'exp'</span>: <span class="hljs-string">'isShow'</span>
+    ],
+    <span class="hljs-string">'staticClass'</span>: <span class="hljs-string">'demo'</span>,
+    <span class="hljs-string">'tag'</span>: <span class="hljs-string">'div'</span>,
+    <span class="hljs-comment">/* 静态标志 */</span>
+    <span class="hljs-string">'static'</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">'children'</span>: [
+        {
+            <span class="hljs-string">'attrsMap'</span>: {
+                <span class="hljs-string">'v-for'</span>: <span class="hljs-string">"item in sz"</span>
+            },
+            <span class="hljs-string">'static'</span>: <span class="hljs-literal">false</span>,
+            <span class="hljs-string">'alias'</span>: <span class="hljs-string">"item"</span>,
+            <span class="hljs-string">'for'</span>: <span class="hljs-string">'sz'</span>,
+            <span class="hljs-string">'forProcessed'</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">'tag'</span>: <span class="hljs-string">'span'</span>,
+            <span class="hljs-string">'children'</span>: [
+                {
+                    <span class="hljs-string">'expression'</span>: <span class="hljs-string">'_s(item)'</span>,
+                    <span class="hljs-string">'text'</span>: <span class="hljs-string">'{{item}}'</span>,
+                    <span class="hljs-string">'static'</span>: <span class="hljs-literal">false</span>
+                }
+            ]
+        }
+    ]
+}
+
+</code></pre><p>我们用代码实现一下 <code>optimize</code> 函数。</p>
+<h3 class="heading" data-id="heading-12">isStatic</h3>
+<p>首先实现一个 <code>isStatic</code> 函数，传入一个 node 判断该 node 是否是静态节点。判断的标准是当 type 为 2（表达式节点）则是非静态节点，当 type 为 3（文本节点）的时候则是静态节点，当然，如果存在 <code>if</code> 或者 <code>for</code>这样的条件的时候（表达式节点），也是非静态节点。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">isStatic</span> (<span class="hljs-params">node</span>) </span>{
+    <span class="hljs-keyword">if</span> (node.type === <span class="hljs-number">2</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
+    }
+    <span class="hljs-keyword">if</span> (node.type === <span class="hljs-number">3</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+    }
+    <span class="hljs-keyword">return</span> (!node.if &amp;&amp; !node.for);
+}
+</code></pre><h3 class="heading" data-id="heading-13">markStatic</h3>
+<p><code>markStatic</code> 为所有的节点标记上 <code>static</code>，遍历所有节点通过 <code>isStatic</code> 来判断当前节点是否是静态节点，此外，会遍历当前节点的所有子节点，如果子节点是非静态节点，那么当前节点也是非静态节点。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">markStatic</span> (<span class="hljs-params">node</span>) </span>{
+    node.static = isStatic(node);
+    <span class="hljs-keyword">if</span> (node.type === <span class="hljs-number">1</span>) {
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">let</span> i = <span class="hljs-number">0</span>, l = node.children.length; i &lt; l; i++) {
+            <span class="hljs-keyword">const</span> child = node.children[i];
+            markStatic(child);
+            <span class="hljs-keyword">if</span> (!child.static) {
+                node.static = <span class="hljs-literal">false</span>;
+            }
+        }
+    }
+}
+</code></pre><h3 class="heading" data-id="heading-14">markStaticRoots</h3>
+<p>接下来是 <code>markStaticRoots</code> 函数，用来标记 <code>staticRoot</code>（静态根）。这个函数实现比较简单，简单来将就是如果当前节点是静态节点，同时满足该节点并不是只有一个文本节点左右子节点（作者认为这种情况的优化消耗会大于收益）时，标记 <code>staticRoot</code> 为 true，否则为 false。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">markStaticRoots</span> (<span class="hljs-params">node</span>) </span>{
+    <span class="hljs-keyword">if</span> (node.type === <span class="hljs-number">1</span>) {
+        <span class="hljs-keyword">if</span> (node.static &amp;&amp; node.children.length &amp;&amp; !(
+        node.children.length === <span class="hljs-number">1</span> &amp;&amp;
+        node.children[<span class="hljs-number">0</span>].type === <span class="hljs-number">3</span>
+        )) {
+            node.staticRoot = <span class="hljs-literal">true</span>;
+            <span class="hljs-keyword">return</span>;
+        } <span class="hljs-keyword">else</span> {
+            node.staticRoot = <span class="hljs-literal">false</span>;
+        }
+    }
+}
+</code></pre><h3 class="heading" data-id="heading-15">optimize</h3>
+<p>有了以上的函数，就可以实现 <code>optimize</code> 了。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">optimize</span> (<span class="hljs-params">rootAst</span>) </span>{
+    markStatic(rootAst);
+    markStaticRoots(rootAst);
+}
+</code></pre><h2 class="heading" data-id="heading-16">generate</h2>
+<p><code>generate</code> 会将 AST 转化成 render funtion 字符串，最终得到 render 的字符串以及 staticRenderFns 字符串。</p>
+<p>首先带大家感受一下真实的 Vue.js 编译得到的结果。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-keyword">with</span>(<span class="hljs-keyword">this</span>){
+    <span class="hljs-keyword">return</span> (isShow) ? 
+    _c(
+        <span class="hljs-string">'div'</span>,
+        {
+            <span class="hljs-attr">staticClass</span>: <span class="hljs-string">"demo"</span>,
+            <span class="hljs-attr">class</span>: c
+        },
+        _l(
+            (sz),
+            <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">item</span>)</span>{
+                <span class="hljs-keyword">return</span> _c(<span class="hljs-string">'span'</span>,[_v(_s(item))])
+            }
+        )
+    )
+    : _e()
+}
+</code></pre><p>看到这里可能会纳闷了，这些 <code>_c</code>，<code>_l</code> 到底是什么？其实他们是 Vue.js 对一些函数的简写，比如说 <code>_c</code> 对应的是 <code>createElement</code> 这个函数。没关系，我们把它用 VNode 的形式写出来就会明白了，这个对接上一章写的 VNode 函数。</p>
+<p>首先是第一层 div 节点。</p>
+<pre><code class="hljs javascript" lang="javascript">render () {
+    <span class="hljs-keyword">return</span> isShow ? (<span class="hljs-keyword">new</span> VNode(<span class="hljs-string">'div'</span>, {
+        <span class="hljs-string">'staticClass'</span>: <span class="hljs-string">'demo'</span>,
+        <span class="hljs-string">'class'</span>: c
+    }, [ <span class="hljs-comment">/*这里还有子节点*/</span> ])) : createEmptyVNode();
+}
+</code></pre><p>然后我们在 <code>children</code> 中加上第二层 span 及其子文本节点节点。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-comment">/* 渲染v-for列表 */</span>
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">renderList</span> (<span class="hljs-params">val, render</span>) </span>{
+    <span class="hljs-keyword">let</span> ret = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Array</span>(val.length);
+    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>, l = val.length; i &lt; l; i++) {
+        ret[i] = render(val[i], i);
+    }
+}
+
+render () {
+    <span class="hljs-keyword">return</span> isShow ? (<span class="hljs-keyword">new</span> VNode(<span class="hljs-string">'div'</span>, {
+        <span class="hljs-string">'staticClass'</span>: <span class="hljs-string">'demo'</span>,
+        <span class="hljs-string">'class'</span>: c
+    }, 
+        <span class="hljs-comment">/* begin */</span>
+        renderList(sz, (item) =&gt; {
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> VNode(<span class="hljs-string">'span'</span>, {}, [
+                createTextVNode(item);
+            ]);
+        })
+        <span class="hljs-comment">/* end */</span>
+    )) : createEmptyVNode();
+}
+</code></pre><p>那我们如何来实现一个 <code>generate</code> 呢？</p>
+<h3 class="heading" data-id="heading-17">genIf</h3>
+<p>首先实现一个处理 <code>if</code> 条件的 <code>genIf</code> 函数。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genIf</span> (<span class="hljs-params">el</span>) </span>{
+    el.ifProcessed = <span class="hljs-literal">true</span>;
+    <span class="hljs-keyword">if</span> (!el.ifConditions.length) {
+        <span class="hljs-keyword">return</span> <span class="hljs-string">'_e()'</span>;
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`(<span class="hljs-subst">${el.ifConditions[<span class="hljs-number">0</span>].exp}</span>)?<span class="hljs-subst">${genElement(el.ifConditions[<span class="hljs-number">0</span>].block)}</span>: _e()`</span>
+}
+</code></pre><h3 class="heading" data-id="heading-18">genFor</h3>
+<p>然后是处理 <code>for</code> 循环的函数。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genFor</span> (<span class="hljs-params">el</span>) </span>{
+    el.forProcessed = <span class="hljs-literal">true</span>;
+
+    <span class="hljs-keyword">const</span> exp = el.for;
+    <span class="hljs-keyword">const</span> alias = el.alias;
+    <span class="hljs-keyword">const</span> iterator1 = el.iterator1 ? <span class="hljs-string">`,<span class="hljs-subst">${el.iterator1}</span>`</span> : <span class="hljs-string">''</span>;
+    <span class="hljs-keyword">const</span> iterator2 = el.iterator2 ? <span class="hljs-string">`,<span class="hljs-subst">${el.iterator2}</span>`</span> : <span class="hljs-string">''</span>;
+
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`_l((<span class="hljs-subst">${exp}</span>),`</span> +
+        <span class="hljs-string">`function(<span class="hljs-subst">${alias}</span><span class="hljs-subst">${iterator1}</span><span class="hljs-subst">${iterator2}</span>){`</span> +
+        <span class="hljs-string">`return <span class="hljs-subst">${genElement(el)}</span>`</span> +
+    <span class="hljs-string">'})'</span>;
+}
+</code></pre><h3 class="heading" data-id="heading-19">genText</h3>
+<p>处理文本节点的函数。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genText</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">return</span> <span class="hljs-string">`_v(<span class="hljs-subst">${el.expression}</span>)`</span>;
+}
+</code></pre><h3 class="heading" data-id="heading-20">genElement</h3>
+<p>接下来实现一下 <code>genElement</code>，这是一个处理节点的函数，因为它依赖 <code>genChildren</code> 以及g <code>enNode</code> ，所以这三个函数放在一起讲。</p>
+<p>genElement会根据当前节点是否有 <code>if</code> 或者 <code>for</code> 标记然后判断是否要用 <code>genIf</code> 或者 <code>genFor</code> 处理，否则通过 <code>genChildren</code> 处理子节点，同时得到 <code>staticClass</code>、<code>class</code> 等属性。</p>
+<p><code>genChildren</code> 比较简单，遍历所有子节点，通过 <code>genNode</code> 处理后用“，”隔开拼接成字符串。</p>
+<p><code>genNode</code> 则是根据 <code>type</code> 来判断该节点是用文本节点 <code>genText</code> 还是标签节点 <code>genElement</code> 来处理。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genNode</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">if</span> (el.type === <span class="hljs-number">1</span>) {
+        <span class="hljs-keyword">return</span> genElement(el);
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">return</span> genText(el);
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genChildren</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">const</span> children = el.children;
+
+    <span class="hljs-keyword">if</span> (children &amp;&amp; children.length &gt; <span class="hljs-number">0</span>) {
+        <span class="hljs-keyword">return</span> <span class="hljs-string">`<span class="hljs-subst">${children.map(genNode).join(<span class="hljs-string">','</span>)}</span>`</span>;
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">genElement</span> (<span class="hljs-params">el</span>) </span>{
+    <span class="hljs-keyword">if</span> (el.if &amp;&amp; !el.ifProcessed) {
+        <span class="hljs-keyword">return</span> genIf(el);
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (el.for &amp;&amp; !el.forProcessed) {
+        <span class="hljs-keyword">return</span> genFor(el);
+    } <span class="hljs-keyword">else</span> {
+        <span class="hljs-keyword">const</span> children = genChildren(el);
+        <span class="hljs-keyword">let</span> code;
+        code = <span class="hljs-string">`_c('<span class="hljs-subst">${el.tag}</span>,'{
+            staticClass: <span class="hljs-subst">${el.attrsMap &amp;&amp; el.attrsMap[<span class="hljs-string">':class'</span>]}</span>,
+            class: <span class="hljs-subst">${el.attrsMap &amp;&amp; el.attrsMap[<span class="hljs-string">'class'</span>]}</span>,
+        }<span class="hljs-subst">${
+            children ? <span class="hljs-string">`,<span class="hljs-subst">${children}</span>`</span> : <span class="hljs-string">''</span>
+        }</span>)`</span>
+        <span class="hljs-keyword">return</span> code;
+    }
+}
+</code></pre><h3 class="heading" data-id="heading-21">generate</h3>
+<p>最后我们使用上面的函数来实现 <code>generate</code>，其实很简单，我们只需要将整个 AST 传入后判断是否为空，为空则返回一个 div 标签，否则通过 <code>generate</code> 来处理。</p>
+<pre><code class="hljs javascript" lang="javascript"><span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">generate</span> (<span class="hljs-params">rootAst</span>) </span>{
+    <span class="hljs-keyword">const</span> code = rootAst ? genElement(rootAst) : <span class="hljs-string">'_c("div")'</span>
+    <span class="hljs-keyword">return</span> {
+        <span class="hljs-attr">render</span>: <span class="hljs-string">`with(this){return <span class="hljs-subst">${code}</span>}`</span>,
+    }
+}
+</code></pre><p>经历过这些过程以后，我们已经把 template 顺利转成了 render function 了，接下来我们将介绍 <code>patch</code> 的过程，来看一下具体 VNode 节点如何进行差异的比对。</p>
+<p>注：本节代码参考<a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Fanswershuto%2FVueDemo%2Fblob%2Fmaster%2F%25E3%2580%258Atemplate%2520%25E6%25A8%25A1%25E6%259D%25BF%25E6%2598%25AF%25E6%2580%258E%25E6%25A0%25B7%25E9%2580%259A%25E8%25BF%2587%2520Compile%2520%25E7%25BC%2596%25E8%25AF%2591%25E7%259A%2584%25E3%2580%258B.js" rel="nofollow noopener noreferrer">《template 模板是怎样通过 Compile 编译的》</a>。</p>
+</div><section data-v-41acfafa="" class="book-comments"><div data-v-41acfafa="" class="box-title">留言</div><div data-v-41acfafa="" class="comment-box"><div data-v-efcd2e56="" data-v-41acfafa="" class="comment-form comment-form" id="comment"><div data-v-b2db8566="" data-v-1b9df826="" data-v-efcd2e56="" data-src="https://avatars1.githubusercontent.com/u/25916562?v=4" class="lazy avatar avatar loaded" title="" style="background-image: url(&quot;https://avatars1.githubusercontent.com/u/25916562?v=4&quot;);"></div><textarea data-v-efcd2e56="" placeholder="评论将在后台进行审核，审核通过后对所有人可见" class="content-input" style="overflow: hidden; overflow-wrap: break-word; height: 60px;"></textarea><div data-v-efcd2e56="" class="action-box" style="display: none;"><div data-v-54e3f196="" data-v-efcd2e56="" class="image-uploader image-uploader" style="display: none;"><input data-v-54e3f196="" type="file" class="input"><button data-v-54e3f196="" class="upload-btn"><i data-v-54e3f196="" class="icon ion-image"></i><span data-v-54e3f196="">上传图片</span></button></div><div data-v-efcd2e56="" class="submit-box"><span data-v-efcd2e56="" class="submit-text">Ctrl or ⌘ + Enter</span><button data-v-efcd2e56="" class="submit-btn">评论</button></div></div><!----></div></div><ul data-v-51163f89="" data-v-41acfafa="" st:block="commentList" class="comment-list comment-list"><!----></ul></section></div></div><!----><!----></body></html>

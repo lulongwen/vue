@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>v-slot 作用域插槽</title>
+  <style>
+    .panel  {
+      max-width: 500px;
+      border: 1px dashed bisque;
+    }
+    .panel > * {
+      padding: 15px;
+    }
+    .panel .title{
+      border-bottom: 1px dashed bisque;
+    }
+    .panel .footer {
+      border-top: 1px dashed bisque;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <panel>
+      <header slot="title" class="title">这里是龙头 🐲</header>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Libero, laborum!
+      这里是核心内容🐷🐷
+    </panel>
+  </div>
+
+  <template id="panel">
+    <div class="panel">
+      <slot name="title"></slot>
+      <main class="content">
+       <slot></slot>
+      </main>
+      <footer class="footer">
+        <slot name="footer">更多信息💻</slot>
+      </footer>
+    </div>
+  </template>
+
+  <script src="../assets/vue.js"></script>
+  <script>
+    Vue.component('panel', {
+      template: '#panel'
+    })
+
+    const options = {
+      el: '#app'
+    }
+    const vm = new Vue(options)
+  </script>
+</body>
+</html>

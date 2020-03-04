@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue.mixin 过滤器</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="robots" content="index,follow">
+</head>
+<body>
+  <!-- 
+    Vue.mixin() 
+    在引入组件之后，则是将组件内部的内容如data等方法、method等属性与父组件相应内容进行合并
+    相当于在引入后，父组件的各种属性方法都被扩充了
+
+    在使用mixins时，父组件和子组件同时拥有着子组件内的各种属性方法
+    但是，子组件和父组件 不同时共享、同时处理这些变量，两者之间除了合并，是不会进行任何通信的
+
+    单纯组件引用：
+      父组件 + 子组件 >>> 父组件 + 子组件
+
+    mixins：
+      父组件 + Vue.mixin() 子组件 >>> 新的父组件
+  -->
+  
+
+<script>
+  /*
+  Vue.mixin({
+    methods: {
+      
+    }
+  });
+  */
+ 
+  // styles type -> Array
+  function addStyles(win, styles) {
+    styles.forEach(style => {
+      let link = win.document.createElement('link');
+      link.setAttribute('rel', 'stylesheet');
+      link.setAttribute('type', 'text/css');
+      link.setAttribute('href', style);
+      win.document.getElementsByTagName('head')[0].appendChild(link);
+    });
+  }
+
+  const VueHtmlToPaper = {
+    install(Vue, options) {
+      Vue.mixin({
+        methods: {
+          $htmlToPaper(el, opts = options) {
+            let {
+              name,
+              specs,
+              replace,
+              styles
+            } = opts;
+            specs = !!specs.length ? specs.join(',') : '';
+
+            const element = document.getElementById(el);
+
+            if(!element) {
+              alert(`Element to print #${el} not found!`);
+              return;
+            }
+            
+            const url = '';
+            const win = window.open(url, name, specs, replace);
+
+            win.document.write(`
+              <html>
+                <head>
+                  <title>${document.title}</title>
+                </head>
+                <body>
+                  ${element.innerHTML}
+                </body>
+              </html>
+            `);
+
+            addStyles(win, styles);
+            
+            setTimeout(() => {
+              win.document.close();
+              win.focus();
+              win.print();
+              win.close();
+            }, 1000);          
+            return true;
+          }
+        }
+      });
+    }
+  }
+
+export default VueHtmlToPaper;
+
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>instance-new Vue实例</title>
+  <style>
+    body{
+      max-width: 800px;
+      width: auto;
+      margin: 3em auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <input type="text" v-model="val">
+  </div>
+
+  <script src="../vue.js"></script>
+  <script>
+    let vm = new Vue({
+      // el: '#app',
+      template: '<div ref="box" id="box"> this is a template {{num}}</div>', // 替换掉 #app
+      data:{
+        num: 0,
+        obj: {},
+        val: 'Goods Vue'
+      },
+      watch:{
+        num(newVal, oldVal){
+          console.log(`new: ${newVal} : old: ${oldVal}`);
+        }
+      }
+    });
+
+    vm.$mount('#app');
+
+    setTimeout( ()=>{
+      vm.num += 1;  // this.num += 2;
+
+      // vm.$data.num += 3;
+      // vm.$options.data +=5;
+    }, 1000)
+
+    console.log('vm.$data', vm.$data, vm);
+    console.log('vm.$props', vm.$props);
+    console.log('vm.$el', vm.$el);
+
+    // new Vue对象
+    console.log('vm.$options', vm.$options);
+
+    // render 函数
+    vm.$options.render = (h)=>{
+      // 必须return
+      return h('div', {}, 'new render function');
+    };
+
+    console.log(vm.$root === vm);
+    console.log(vm.$children);
+
+
+    console.log(vm.$slots);
+    console.log(vm.$scopedSlots);
+
+
+    // DOM
+    console.log('DOM', vm.$refs);
+
+
+    // 服务端渲染
+    console.log('SSR', vm.$isServer);
+
+
+    // vm.$watch('num', (newVal, oldVal)=>{
+    //   console.log(`new: ${newVal} : old: ${oldVal}`);
+    // });
+
+    // 销毁 $watch
+    let unWatch = vm.$watch('num', (newVal, oldVal)=>{
+      console.log(`new: ${newVal} : old: ${oldVal}`);
+    });
+
+
+    // Event $on  $emit
+    vm.$on('test', (a,b)=>{
+      console.log(`test emited ${a} ${b}`);
+    });
+
+    vm.$emit('test', 'ok', 16);
+
+    // $once 只触发一次
+    vm.$once('once', (a,b)=>{
+      console.log(`test emited ${a} ${b}`);
+    });
+
+    setTimeout( ()=>{
+      vm.$emit('once', 'lala', '88');
+      vm.$emit('test', 'more', 'haoduo');
+    }, 1000);
+
+
+    // vm.$set 设置属性
+    let i = 9;
+    setTimeout( ()=>{
+      i++;
+      vm.$set(vm.obj, 'title', i);
+      // vm.obj.title = i; // 只改变一次
+      // vm.$forceUpdate(); // 强制实例重新渲染 render组件
+
+      // vm.$delete(vm.obj, 'title'); // 删除属性
+    }, 1000);
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue.filter 全局过滤器</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="code">
+  <meta name="author" content="卢珑文">
+  <meta name="robots" content="index,follow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+</head>
+<body>
+<div id="app">
+  <h1>vue 过滤器</h1>
+
+  <!-- 使用 组件 -->
+  <div id="box">
+    <h3>Vue.filter() 空位补零</h3>
+    <b>{{msg | double}}</b>
+    <footer>
+      {{ 'hello' | my }}
+    </footer>
+  </div>
+</div>
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  // 全局过滤器， 必须放在Vue 实例前面，页面的顶部
+  Vue.filter('double', function(val){
+    console.log(val);
+    return val < 10 ? '0'+val : ''+ val;
+  });
+
+  Vue.filter('my', data => {
+    console.log('data',data)
+    return `jwt${data}`;
+  })
+
+  new Vue({
+    el: '#app', // 选择器
+    data:{  // 数据
+      msg: 9
+
+    }
+  });
+
+</script>
+</body>
+</html>

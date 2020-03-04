@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="UTF-8">
+  <title>keep-alive 缓存路由和组件</title>
+  <meta name="keywords" content="">
+  <meta name="description" content="">
+  <meta name="generator" content="PHPStorm">
+  <meta name="author" content="卢珑文">
+  <meta name="robots" content="index,follow">
+  <style>
+    .home, .list{
+      width: 600px;
+      height: 300px;
+      margin: 1em 0;
+      padding: 1em;
+      background-color: #cce5ff;
+      font-size: 2em;
+    }
+    .home{
+      background-color: #c25f77;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <label for="">
+      home
+      <input type="radio" v-model="radio" value="home">
+    </label>
+    <label for="">
+      list
+      <input type="radio" v-model="radio" value="list">
+    </label>
+
+    <!-- keep-alive 一般作为缓存，为路由和组件做缓存，避免重复加载
+     去掉 keep-alive 会弹出 销毁组件的提示，组件会重复挂在，性能不好
+     -->
+    <keep-alive>
+      <component :is="radio" />
+    </keep-alive>
+  </div>
+
+  <script src="../assets/vue/vue.min.js"></script>
+  <script>
+    let Home = {
+      template: ` <div class="home"> home组件 </div> `,
+      mounted(){
+        console.log('挂在home组件')
+      },
+      beforeDestroy(){
+        console.log('销毁home组件')
+      }
+    };
+
+    let List = {
+      template: ` <div class="list"> list组件 </div> `,
+      mounted(){
+        console.log('挂在list组件')
+      },
+      beforeDestroy(){
+        console.log('销毁list组件')
+      }
+    };
+
+    let vm = new Vue({
+      el: '#app',
+      components:{
+        Home,
+        List
+      },
+      data: {
+        radio: 'home'
+      },
+    });
+  </script>
+</body>
+</html>

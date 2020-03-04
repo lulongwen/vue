@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Vue键盘事件</title>
+  <style>
+    input {
+      width: 300px;
+      padding: 15px 10px;
+      border: 1px solid #ddd;
+      color: #333;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+<h1> v-on: 简写 @ </h1>
+
+<p>
+  &lt;input type="text" @keydown.13="show($event)"> <br>
+  &lt;input type="text" @keydown.enter="show($event)">
+</p>
+<div class="box">
+  <!--<input type="text" @keydown.13="show($event)">-->
+  <input type="text" @keydown.enter="show($event)">
+</div>
+<hr>
+<h2>上下左右方向键</h2>
+@key.left="show()"; ← <br>
+@key.right="show()"; → <br>
+@key.top="show()"; ↑ <br>
+@key.bottom="show()"; ↓ <br><br>
+
+&lt;input type="text" @keyup.left="show()">
+
+<script src="../vue/dist/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '.box', // 选择器
+    data: {  // 数据
+      txt: ''
+    },
+    methods: {  // 事件
+      show: function (ev) {
+        // 这个 ev和 JS的事件一样
+        // console.log( ev.keyCode );
+
+        alert('回车键按下了')
+      }
+    }
+  });
+</script>
+</body>
+</html>

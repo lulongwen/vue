@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vue transition动画 是个组件</title>
+  <meta name="keyword" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="../node_modules/animate.css">
+  <style>
+    #box {
+      width: 120px;
+      height: 120px;
+      background-color: #f00;
+    }
+
+    .fade-enter, .fade-to {
+      opacity: 0;
+    }
+
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 1s;
+    }
+  </style>
+</head>
+<body>
+<div id="box">
+  <h1>transition-group 多个元素动画</h1>
+  <p>
+    transition-group 相当于给给没给元素都包裹了 transition 属性
+  </p>
+  <hr>
+
+  <button class="button" @click="toggle =!toggle">切换</button>
+  <transition-group tag="ul">
+    <li v-for="item of list" :key="item.id"> {{item.title}}</li>
+  </transition-group>
+
+</div>
+
+
+<script src="../node_modules/vue/dist/vue.js"></script>
+<script>
+  var vm = new Vue({
+    el: '#box', // 选择器
+    data: {  // 数据
+      toggle: true
+    },
+    methods: {
+      tog() {
+        this.toggle = !this.toggle;
+      }
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue :class json形式绑定 class</title>
+  <style>
+    #app{
+      max-width: 800px;
+      margin: 2rem auto;
+    }
+    .red {
+      height: 100px;
+      background-color: #f00;
+    }
+    .white {
+      color: #fff;
+    }
+    .active {
+      height: 130px;
+      padding: 15px;
+      color: #333;
+      background-color: brown;
+      font-weight: 600;
+      font-size: 26px;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h1>:class json形式绑定 class 推荐</h1>
+
+
+  <!-- 绑定class中的三元运算 -->
+  <h3 :class="a ? bd : white">VUE 添加类</h3>
+
+
+  <h3 :class="json">VUE 添加类</h3>
+
+
+  <!-- 多个 class 不冲突 -->
+  <h3 :class="classA" class="active">VUE 添加类</h3>
+
+
+  <!-- array 多个 :class 数组和对象混用，a是个布尔值 -->
+  <h3 :class="[classA, {'red-font': a}, classC]">VUE 添加类</h3><br>
+  <h3 :class="[classC, white]">VUE 添加类</h3>
+  <h3 :class="[red]">VUE 添加类</h3>
+
+
+
+  <!-- 绑定class中的判断 -->
+  <h3 :class="{red:a, white: b}">VUE 添加类</h3>
+
+  <!-- boolean 布尔值形式绑定 :class -->
+  <h3 :class="{red: true, white: true}">VUE 添加类</h3>
+
+</div>
+
+
+<script src="../assets/js/vue.min.js"></script>
+<script>
+  new Vue({
+    el: '#app', // 选择器
+
+    data: {  // 数据
+      json: {
+        red: true,
+        white: true
+      },
+      classA: 'active',
+      classB: 'white',
+      classC: 'red',
+
+      a: true,
+      b: false,
+      bd: 'bd',
+      white: 'white'
+    }
+  });
+</script>
+</body>
+</html>

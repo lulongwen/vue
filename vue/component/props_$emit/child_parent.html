@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>子组件传值给父组件-vue组件</title>
+</head>
+<body>
+
+<div id="app">
+  <h3>父级元素：{{ title.text }}</h3>
+
+  <com-child :msg="title" @on-child-msg="msgFN"></com-child>
+
+  <pre>
+    父组件绑定一些事件，子组件触发这个事件，
+    将参数传递给父组件，单向数据流
+    父组件刷新，子组件就自动刷新了
+  </pre>
+</div>
+
+
+<!-- 组件  -->
+<template id="child">
+  <div>
+    <header>
+      这是子组件标题
+      <button class="button" @click="changeFN">子组件传值</button>
+    </header>
+    
+    <h3>
+      <mark v-text="msg.text"></mark>
+    </h3>
+
+    <ul>
+      <li v-for="(val, index) in item" :key=`index${index}`>
+        <a :data-index=`index${index}`> {{val}}</a>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script src="../../node_modules/vue/dist/vue.js"></script>
+<script>
+  const VM = new Vue({
+    el: '#app', // 选择器
+    data: {  // 数据
+      title: {
+        text: '这是父组件的数据'
+      }
+
+    },
+    methods: { 
+      // 父组件的方法
+      msgFN(val) {
+        this.title.text = val;
+      }
+    },
+    components: {
+      'com-child': {
+        props: {
+          msg: Object
+        },
+        template: '#child',
+        methods: {
+          changeFN() {
+            // 触发自己的自定义事件，让父组件的方法执行
+            this.$emit('on-child-msg', '子组件传值改变父组件 800万');
+          }
+        },
+        data() {
+          return {
+            item: ['apple', 'orange', 'pear', 'mango']
+          }
+        }
+      }
+    }
+  });
+
+</script>
+</body>
+</html>

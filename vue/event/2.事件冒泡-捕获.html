@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue 事件</title>
+	<style>
+		#app div {
+			padding: 30px;
+			border: 1px solid #eee;
+		}
+	</style>
+</head>
+<body>
+	<div id="app">
+		<div @click="grandpa">
+      爷爷：第一级盒子
+      <div @click.self="parent">
+        父级盒子：第二级
+        <div @click="child">child 第三级盒子</div>
+      </div>
+    </div>
+
+    <!-- 事件冒泡 事件捕获 .self .stop .capture .prevent 
+    .键盘码 right left space esc -->
+    <a href="https://lulongwen.com" @click.prevent="child">珑文的博客</a>
+	
+	</div>
+	
+	<script src="../vue.js"></script>
+	<script>
+
+		const vm = new Vue({
+			el: '#app',
+			data: {
+				value: '',
+				list:['香蕉','橘子','柠檬']
+			},
+
+			// methods中所有的方法 this指向都是vm
+			methods: {
+				grandpa() {
+					console.log('1. grandpa 第一级盒子')
+				},
+				parent() {
+					console.log('2. father 第二级盒子')
+				},
+				child() {
+					console.log('3. child第三级盒子')
+				}
+			}
+		})
+	</script>
+</body>
+</html>

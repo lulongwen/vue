@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Vue技术点</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      color: #343d46;
+      background-color: #343d46;
+      font-size: 16px;
+      font-family: menlo,'思源黑体',consolas, 'courier new', monospace;
+    }
+    h1, h2, h3 {
+      margin: 10px 0;
+      color: #fff;
+      font-size: 20px;
+    }
+    ul{
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .app {
+      column-gap: 10px;
+      column-count: 6;
+    }
+    .app > li, .red > li {
+      padding: 10px;
+      margin-bottom: 10px;
+      break-inside: avoid;
+      overflow: hidden;
+      background-color: #f99157
+    }
+    .app .link {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .app .link:first-line {
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
+    }
+    .app .link small {
+      float: right;
+      color: #c0c5ce;
+      pointer-events: none;
+    }
+    .app li li {
+      padding: 5px;
+    }
+    .app li li:hover, .app li li:focus, .red > li:hover {
+      background-color: rgba(255,255,255,0.1);
+      color: #333;
+    }
+    .app ul li:nth-child(odd), .red > li {
+      color: #e6e6e6;
+      background-color: rgba(0,0,0,0.05);
+    }
+
+    .app > li:nth-child(1),
+    .app > li:nth-child(2),
+    .app > li:nth-child(12),
+    .app > li:nth-child(13),
+    .red {background-color: #ec5f67}
+
+    .app > li:nth-child(9),
+    .app > li:nth-child(10),
+    .app > li:nth-child(11) {background-color: #5fb3b3}
+
+    .app > li:nth-child(14),
+    .app > li:nth-child(15),
+    .app > li:nth-child(16) {background-color: #ab7967}
+    .app > li:nth-child(16) ~ li {background-color: #89b784}
+
+
+    @media (max-width : 767px) {
+      .app {
+        column-count: 2
+      }
+    }
+    @media (min-width : 768px) and (max-width : 1439px) {
+      .app {
+        column-count: 4
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <h1>1 Vue API</h1>
+  <ul class="app">
+    <li>
+      <a class="link">
+        <small>全局配置</small>
+        Config</a>
+      <ul>
+        <li>silent</li>
+        <li>optionMergeStrategies</li>
+        <li>devtools</li>
+        <li>errorHandler</li>
+        <li>ignoredElements</li>
+        <li>keyCodes</li>
+        <li>performance</li>
+        <li>productionTip</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>全局配置</small>
+        API</a>
+      <ul>
+        <li>Vue.extend</li>
+        <li>Vue.nextTick</li>
+        <li>Vue.set</li>
+        <li>Vue.delete</li>
+        <li>Vue.directive</li>
+        <li>Vue.filter</li>
+        <li>Vue.component</li>
+        <li>Vue.use</li>
+        <li>Vue.mixin</li>
+        <li>Vue.compile</li>
+        <li>Vue.version</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>生命周期钩子</small>
+        Lifecycle</a>
+      <ul>
+        <li>beforeCreate</li>
+        <li>created</li>
+        <li>beforeMount</li>
+        <li>mounted</li>
+        <li>beforeUpdate</li>
+        <li>updated</li>
+        <li>activated</li>
+        <li>deactivated</li>
+        <li>beforeDestroy</li>
+        <li>destroyed</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Options</small>
+        Data</a>
+      <ul>
+        <li>data</li>
+        <li>props</li>
+        <li>propsData</li>
+        <li>computed</li>
+        <li>methods</li>
+        <li>watch</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>DOM操作</small>
+        DOM</a>
+      <ul>
+        <li>el</li>
+        <li>template</li>
+        <li>render</li>
+        <li>renderError</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Options</small>
+        Assets</a>
+      <ul>
+        <li>directives</li>
+        <li>filters</li>
+        <li>components</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Options</small>
+        Composition</a>
+      <ul>
+        <li>parent</li>
+        <li>mixins</li>
+        <li>extends</li>
+        <li>provide / inject</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Options</small>
+        Misc</a>
+      <ul>
+        <li>name</li>
+        <li>delimiters</li>
+        <li>functional</li>
+        <li>model</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Methods</small>
+        Data</a>
+      <ul>
+        <li>vm.$watch</li>
+        <li>vm.$set</li>
+        <li>vm.$delete</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Methods</small>
+        Events</a>
+      <ul>
+        <li>vm.$on</li>
+        <li>vm.$once</li>
+        <li>vm.$off</li>
+        <li>vm.$emit</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Methods</small>
+        Lifecycle</a>
+      <ul>
+        <li>vm.$mount</li>
+        <li>vm.$forceUpdate</li>
+        <li>vm.$nextTick</li>
+        <li>vm.$destroy</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Vue实例</small>
+        Properties</a>
+      <ul>
+        <li>vm.$data</li>
+        <li>vm.$props</li>
+        <li>vm.$el</li>
+        <li>vm.$options</li>
+        <li>vm.$parent</li>
+        <li>vm.$root</li>
+        <li>vm.$children</li>
+        <li>vm.$slots</li>
+        <li>vm.$scopedSlots</li>
+        <li>vm.$refs</li>
+        <li>vm.$isServer</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>v-指令</small>
+        Directives</a>
+      <ul>
+        <li>v-text</li>
+        <li>v-html</li>
+        <li>v-show</li>
+        <li>v-if</li>
+        <li>v-else</li>
+        <li>v-else-if</li>
+        <li>v-for</li>
+        <li>v-on</li>
+        <li>v-bind</li>
+        <li>v-model</li>
+        <li>v-pre</li>
+        <li>v-cloak</li>
+        <li>v-once</li>
+        <li>v-slot</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">Directives
+        <small>Hooks</small>
+      </a>
+      <ul>
+        <li>bind</li>
+        <li>inserted</li>
+        <li>update</li>
+        <li>componentUpdated</li>
+        <li>unbind</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>html</small>
+        Attributes</a>
+      <ul>
+        <li>key</li>
+        <li>ref</li>
+        <li>slot</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">
+        <small>Built-In</small>
+        Components</a>
+      <ul>
+        <li>component</li>
+        <li>transition</li>
+        <li>transition-group</li>
+        <li>keep-alive</li>
+        <li>slot</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">v-model
+        <small>Modifiers</small>
+      </a>
+      <ul>
+        <li>v-model.lazy</li>
+        <li>v-model.number</li>
+        <li>v-model.trim</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">Event
+        <small>事件修饰符</small>
+      </a>
+      <ul>
+        <li>v-on:click.native</li>
+        <li>v-on:click.stop</li>
+        <li>v-on:click.prevent</li>
+        <li>v-on:click.passive</li>
+        <li>v-on:click.capture</li>
+        <li>v-on:click.self</li>
+        <li>v-on:click.once</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">v-bind
+        <small>Modifiers</small>
+      </a>
+      <ul>
+        <li>v-bind.prop</li>
+        <li>v-bind.camel</li>
+        <li>v-bind.sync</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">Mouse
+        <small>鼠标修饰符</small>
+      </a>
+      <ul>
+        <li>v-on:click.left</li>
+        <li>v-on:click.right</li>
+        <li>v-on:click.middle</li>
+      </ul>
+    </li>
+    <li>
+      <a class="link">Keyboard
+        <small>键盘修饰符</small>
+      </a>
+      <ul>
+        <li>v-on:keyup.ctrl</li>
+        <li>v-on:keyup.alt</li>
+        <li>v-on:keyup.shift</li>
+        <li>v-on:keyup.meta</li>
+        <li>v-on:keyup.enter</li>
+        <li>v-on:keyup.tab</li>
+        <li>v-on:keyup.delete</li>
+        <li>v-on:keyup.esc</li>
+        <li>v-on:keyup.up</li>
+        <li>v-on:keyup.down</li>
+        <li>v-on:keyup.left</li>
+        <li>v-on:keyup.right</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>2 Vue 组件通信</h2>
+  <div>
+    <ul class="red">
+      <li>props & $emit()</li>
+      <li>.sync & v-model</li>
+      <li>$parent & $children</li>
+      <li>$dispatch & $broadcase</li>
+      <li>$attrs & $listeners</li>
+      <li>provide & inject</li>
+      <li>ref</li>
+      <li>EventBus</li>
+      <li>Vuex</li>
+    </ul>
+    <div></div>
+  </div> 
+</body>
+
+</html>

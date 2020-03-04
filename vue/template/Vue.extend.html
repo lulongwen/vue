@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue var 声明组件</title>
+</head>
+<body>
+
+<!-- 使用 组件 -->
+<div id="box">
+  <h3>父级元素：{{ text }}</h3>
+  <hr>
+  <!-- <myheader></myheader> -->
+  <aaa></aaa>
+</div>
+
+
+<template id="myheader">
+  <div>
+    <h3 class="list-header">这是template 的标题</h3>
+    <strong>var 声明的组件</strong>
+  </div>
+</template>
+
+<script src="../assets/js/vue.js"></script>
+<script>
+  // 声明组件 2.0 组件，替代 Vue.extend()
+  var Home = {
+    template: '#myheader'
+  };
+
+
+  new Vue({
+    el: '.jquery', // 选择器
+    data: {  // 数据
+      text: '这是大标题呀'
+    },
+    components: {
+      'aaa': Home
+    }
+  });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-cmn-hans">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>vue checkbox</title>
+  <style>
+    body{
+      max-width: 600px;
+      margin: 2em auto;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- 如果复选框只有一个的时候，会把值转换成 boolean类型， true代表选中
+    如果 多个checkbox，要给 checkbox添加 value属性，并且数据类型必须是 数组 []
+    默认根据 v-model进行分组
+  -->
+  <input type="checkbox" v-model="boo"> {{ boo }}<br>
+
+  <input type="checkbox" v-model="arr" value="游泳"> 游泳 <br>
+  <input type="checkbox" v-model="arr" value="爬山"> 爬山 <br>
+  <input type="checkbox" v-model="arr" value="吃饭"> 吃饭 <br>
+  <input type="checkbox" v-model="arr" value="睡觉"> 睡觉 <br>
+  <p>arr: {{ arr }} {{ arr.length }}</p>
+</div>
+
+
+<script src="../assets/vue/vue.js"></script>
+<script>
+  const vm = new Vue({
+    el: '#app',
+    data:{
+      boo: false,
+      arr: []
+    }
+  });
+
+</script>
+
+
+
+
+</body>
+</html>
