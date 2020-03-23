@@ -1,4 +1,26 @@
-# Vue源码解析
+# Vue源码实现
+
+> Vue中2大核心点 MVVM 和 DOM-diff
+
+1. vue如何实现数据劫持
+  - 对象的劫持
+  - 数组的劫持
+2. vue中的观察者模式
+3. computed和watch的原理
+4. vue中数据的批量更新，而不是立即更新
+5. vue中的虚拟DOM及虚拟DOM的作用
+  - vnode实现
+  - dom diff的实现
+  
+  
+## 1 webpack 环境配置
+
+```bash
+yarn add webpack webpack-cli webpack-dev-server -D
+
+yarn add html-webpack-plugin -D
+
+```
 
 
 ## 一 数据驱动
@@ -114,7 +136,7 @@ const app = new Vue({
 	Vue React
 	重点解决了组件化问题，选择合适的框架，可以节约架构成本，还能够享受资源
 
-基于数据驱动视图的思想，根据json数据快速构建crud和form等组件 
+基于数据驱动视图的思想，根据json数据快速构建crud和form等组件
 
 
 
