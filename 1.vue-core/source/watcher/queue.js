@@ -1,3 +1,4 @@
+import nextTick from './nextTick'
 
 let queue = []
 let has = {}
@@ -12,7 +13,8 @@ export function queueWatcher (watcher) {
   console.log('queue', id, queue)
   
   // 延迟清空队列，异步方法会等所有同步方法都执行完后在调用此方法
-  setTimeout(clearQueue, 0)
+  // setTimeout(clearQueue, 0)
+  nextTick(clearQueue)
 }
 
 // 等当前这一轮全部更新后，再去让 watcher 依次执行

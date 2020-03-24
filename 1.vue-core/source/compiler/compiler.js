@@ -32,7 +32,7 @@ function compilerText(node, vm) {
     node.temp = node.textContent
   }
   node.textContent = node.temp.replace(reg, (...arg) => {
-    return getValue(vm, arg[1]) // arg[1] -> value
+    return JSON.stringify(getValue(vm, arg[1])) // arg[1] -> value
   })
 }
 

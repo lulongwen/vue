@@ -1,7 +1,6 @@
 // 默认先查找 source目录下的 vue文件夹 source/vue
 // webpack.config.js 配置 resolve
 import Vue from 'vue'
-
 const log = console.log
 
 const vm = new Vue({
@@ -12,7 +11,7 @@ const vm = new Vue({
       user: {
         name: 'lucy', age: 200
       },
-      arr: [100, 200, 300, {data: 400, ok: 'ok'}]
+      arr: [{data: 400, ok: 'ok'}, 100, 200, 300]
     }
   },
   computed: {
@@ -26,14 +25,16 @@ const vm = new Vue({
   }
 })
 
-log('vm', vm)
-
+// log('vm', vm)
 setTimeout(() => {
-  vm.value = '领域驱动设计'
-  vm.value = '1000000'
-  vm.value = 'xxxxxxx'
+  // vm.value = '领域驱动设计'
+  // vm.value = '1000000'
+  // vm.value = 'xxxxxxx'
   vm.value = 'yyyyyyy'
   // 批量更新，防止重复渲染，以上会更新 4次，期望的结果：只更新一次
+  
+  vm.arr.push(500)
+  vm.arr[0].data = '新手'
 }, 1000)
 
 
